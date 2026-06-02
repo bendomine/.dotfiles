@@ -25,6 +25,7 @@
     # # "Hello, world!" when run.
     hello
     tree
+    fd
     fastfetch
     spotify
     gh
@@ -39,7 +40,8 @@
     roboto
     lexend
     direnv
-    basedpyright
+    # basedpyright
+    pyright
     godot
     playerctl
     grimblast
@@ -47,6 +49,11 @@
     gemini-cli
     domine
     blender
+    kdePackages.qtdeclarative
+    kdePackages.qtwayland
+    kdePackages.qtsvg
+    # papirus-icon-theme
+    qt6.qtsvg
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -72,6 +79,8 @@
       email = "ben.w.domine@gmail.com";
     };
   };
+  programs.quickshell.enable = true;
+
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
   # I’ll mkOutOfStoreSymlink files, so that I can update config files without
@@ -122,7 +131,8 @@
   #  /etc/profiles/per-user/ben/etc/profile.d/hm-session-vars.sh
   #
   home.sessionVariables = {
-    # EDITOR = "emacs";
+    EDITOR = "emacs -c";
+    XDG_DATA_DIRS = "$XDG_DATA_DIRS:$HOME/.nix-profile/share:/run/current-system/sw/share";
   };
 
   # Let Home Manager install and manage itself.
