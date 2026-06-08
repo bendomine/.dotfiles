@@ -1,5 +1,9 @@
 { config, pkgs, ... }:
 
+let
+  antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
+  antigravityPkg = antigravityFlake.packages.${pkgs.system};
+in
 {
   # Home Manager needs a bit of information about you and the paths it should
   # manage.
@@ -31,6 +35,7 @@
     gh
     python313
     discord
+    protontricks
     glab
     (google-chrome.override {
       commandLineArgs = [
@@ -47,6 +52,8 @@
     grimblast
     satty
     gemini-cli
+    heroic
+    # antigravity
     domine
     blender
     kdePackages.qtdeclarative
@@ -54,6 +61,9 @@
     kdePackages.qtsvg
     # papirus-icon-theme
     qt6.qtsvg
+    antigravityPkg.default
+    antigravityPkg.google-antigravity-ide
+    antigravityPkg.google-antigravity-cli
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
