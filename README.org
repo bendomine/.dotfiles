@@ -2,4 +2,4 @@
 #+author: Ben Domine
 
 * Overview
-These are the dotfiles for my NixOS setup. This repo should contain everything I need to replicate my setup, except of course for the systemwide nix config.
+These are the dotfiles for my NixOS setup. This repo should contain everything I need to replicate my setup.
