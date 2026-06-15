@@ -1,5 +1,22 @@
+#version 330
+precision mediump float;
+uniform float u_time;
+uniform vec3 u_a;
+uniform vec3 u_b;
+uniform vec3 u_c;
+uniform vec3 u_d;
+out vec4 fragColor;
+
 vec4 colormap(float x) {
     return vec4(clamp(x, 0.0, 1.0), clamp(0.5 * x + 0.5, 0.0, 1.0), 0.4, 1.0);
+}
+
+vec3 palette(float t) {
+  // vec3 a = vec3(0.5);
+  // vec3 b = vec3(0.5);
+  // vec3 c = vec3(2., 1., 0.);
+  // vec3 d = vec3(0.5, 0.2, 0.25);
+  return u_a + u_b * cos(2. * 3.14159 * (u_c * t + u_d));
 }
 
 float random(vec2 st) {
@@ -63,5 +80,7 @@ float warp(vec2 p) {
 
 void main()
 {
-    gl_FragColor = colormap(warp(gl_FragCoord.xy));
+  // fragColor = colormap(warp(gl_FragCoord.xy + u_time * 100.));
+  fragColor = vec4(palette(warp(gl_FragCoord.xy + u_time * 100.)), 1.);
+  // fragColor = vec4(0.);
 }

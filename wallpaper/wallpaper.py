@@ -3,6 +3,7 @@ import sys
 import time
 import requests
 import subprocess
+from random import random
 from datetime import datetime
 import moderngl
 import numpy as np
@@ -11,7 +12,7 @@ from PIL import Image
 # --- CONFIGURATION ---
 LAT = 38.6270  # Replace with your latitude
 LON = -90.1994  # Replace with your longitude
-MONITOR = "DP-1"  # Replace with your active monitor
+MONITOR = "eDP-1"  # Replace with your active monitor
 WIDTH, HEIGHT = 1920, 1080  # Default resolution
 SHADER_FILE = os.path.expanduser("./main.frag")
 
@@ -51,19 +52,17 @@ def fetch_solar_and_weather():
         sunset_fraction = time_to_fractional_day(sunset_str)
 
         return {
-            "u_weather": weather_code,
-            "u_time_of_day": now_fraction,
-            "u_sunrise": sunrise_fraction,
-            "u_sunset": sunset_fraction
+            "weather": weather_code,
+            "sunrise": sunrise_fraction,
+            "sunset": sunset_fraction
         }
     except Exception as e:
         print(f"Error fetching atmospheric data: {e}", file=sys.stderr)
         # Safe fallback values (Midday, clear sky, typical solar intervals)
         return {
-            "u_weather": 0.0,
-            "u_time_of_day": 0.5,
-            "u_sunrise": 0.25,  # ~6:00 AM
-            "u_sunset": 0.75    # ~6:00 PM
+            "weather": 0.0,
+            "sunrise": 0.25,  # ~6:00 AM
+            "sunset": 0.75    # ~6:00 PM
         }
 
 
@@ -75,17 +74,9 @@ def render_shader(shader_path, data, out_path):
 
     # Prepare shader source for ModernGL (330 core)
     # We add a header for compatibility with glslViewer-style shaders
-    header = "#version 330\n"
-    header += "uniform vec2 u_resolution;\n"
-    header += "uniform float u_time;\n"
-    for key in data:
-        header += f"uniform float {key};\n"
-    header += "out vec4 fragColor;\n"
-    header += "#define gl_FragColor fragColor\n"
 
     # If the shader already has #version, we might need to be more careful,
     # but for simple shaders this prepend works.
-    full_frag_source = header + frag_content
 
     vert_source = """
     #version 330
@@ -96,17 +87,15 @@ def render_shader(shader_path, data, out_path):
     """
 
     prog = ctx.program(vertex_shader=vert_source,
-                       fragment_shader=full_frag_source)
+                       fragment_shader=frag_content)
 
     # Set uniforms safely
-    if 'u_resolution' in prog:
-        prog['u_resolution'].value = (WIDTH, HEIGHT)
     if 'u_time' in prog:
         prog['u_time'].value = time.time() % 1000.0
 
     for key, value in data.items():
         if key in prog:
-            prog[key].value = float(value)
+            prog[key].value = value
 
     # Full screen quad
     vertices = np.array([
@@ -140,7 +129,18 @@ def main():
 
     # Fetch dynamic values
     # data = fetch_solar_and_weather()
-    data = {}
+    # data = {
+    #     "u_a": (0.5, 0.2, 0.4),
+    #     "u_b": (0.6, 0.0, 0.4),
+    #     "u_c": (0.5, 0.8, 0.5),
+    #     "u_d": (0.6, 0.0, 0.0)
+    # }
+    data = {
+        "u_a": (random(), random(), random()),
+        "u_b": (random(), random(), random()),
+        "u_c": (random(), random(), random()),
+        "u_d": (random(), random(), random())
+    }
 
     # --- TEMPLATE: CALCULATE YOUR CUSTOM UNIFORMS HERE ---
     # You can process the raw API inputs into higher-level shader properties.
@@ -178,7 +178,7 @@ def main():
     # ----------------------------------------------------
 
     # Generate transient unique file to completely break hyprpaper's caching
-    new_image = os.path.expanduser(f"/tmp/shader_bg_{int(time.time())}.png")
+    new_image = os.path.expanduser(f"/tmp/wallpaper_shader.png")
 
     # Render single frame using ModernGL
     try:
@@ -192,10 +192,10 @@ def main():
         sys.exit(1)
 
     # Atomic swap inside hyprpaper IPC
-    subprocess.run(
-        ["hyprctl", "hyprpaper", "preload", new_image],
-        stdout=subprocess.DEVNULL
-    )
+    # subprocess.run(
+    #     ["hyprctl", "hyprpaper", "preload", new_image],
+    #     stdout=subprocess.DEVNULL
+    # )
     subprocess.run(
         ["hyprctl", "hyprpaper", "wallpaper", f"{MONITOR},{new_image}"],
         stdout=subprocess.DEVNULL
