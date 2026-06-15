@@ -1,6 +1,6 @@
 echo
-# .fastfetch-wrapped -c examples/30
-.fastfetch-wrapped -c examples/6
+# .fastfetch-wrapped -c examples/6
+fastfetch
 
 # Get the current terminal width in columns
 # TERMINAL_WIDTH=$(tput cols)
@@ -19,3 +19,4 @@ if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
 fi
 
 alias hms="home-manager switch -f ~/.dotfiles/home.nix"
+alias nrs="nixos-rebuild switch"

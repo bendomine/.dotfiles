@@ -3,6 +3,10 @@
 let
   antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
   antigravityPkg = antigravityFlake.packages.${pkgs.system};
+
+  wallpaper-bin = pkgs.writers.writePython3Bin "wallpaper" {
+    libraries = with pkgs.python3Packages; [requests moderngl numpy pillow];
+  } (builtins.readFile ./wallpaper/wallpaper.py);
 in
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -33,7 +37,12 @@ in
     fastfetch
     spotify
     gh
-    python313
+    (python313.withPackages (ps: with ps; [
+      requests
+      moderngl
+      numpy
+      pillow
+    ]))
     discord
     protontricks
     glab
@@ -64,6 +73,7 @@ in
     antigravityPkg.default
     antigravityPkg.google-antigravity-ide
     antigravityPkg.google-antigravity-cli
+    glslviewer
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -122,7 +132,37 @@ in
     "hypr".source = link "${dotfilesDir}/hypr";
   };
 
-  
+  # Cursor
+  home.pointerCursor = {
+    gtk.enable = true;
+    x11.enable = true;
+    package = pkgs.capitaine-cursors;
+    name = "capitaine-cursors";
+    size = 36;
+  };
+
+  systemd.user.services.wallpaper = {
+    Unit = {
+      Description = "One-shot wallpaper generator";
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${wallpaper-bin}/bin/wallpaper";
+    };
+  };
+  systemd.user.timers.wallpaper = {
+    Unit = {
+      Description = "Trigger wallpaper generator periodically";
+    };
+    Timer = {
+      OnCalendar = "*:0,15,30,45";
+      Persistent = true;
+    };
+    Install = {
+      WantedBy = [ "timers.target" ];
+    };
+  };
 
   # Home Manager can also manage your environment variables through
   # 'home.sessionVariables'. These will be explicitly sourced when using a
