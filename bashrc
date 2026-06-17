@@ -19,4 +19,4 @@ if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
 fi
 
 alias hms="home-manager switch -f ~/.dotfiles/home.nix"
-alias nrs="nixos-rebuild switch"
+alias nrs="sudo nixos-rebuild switch"

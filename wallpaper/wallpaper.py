@@ -41,7 +41,7 @@ def fetch_solar_and_weather():
         weather_code = float(response['current_weather']['weathercode'])
 
         # 2. Current fractional time
-        now_fraction = time_to_fractional_day(datetime.now())
+        # now_fraction = time_to_fractional_day(datetime.now())
 
         # 3. Sunrise and Sunset fractional times
         # Open-Meteo daily indices return arrays; index 0 is today
@@ -178,7 +178,7 @@ def main():
     # ----------------------------------------------------
 
     # Generate transient unique file to completely break hyprpaper's caching
-    new_image = os.path.expanduser(f"/tmp/wallpaper_shader.png")
+    new_image = os.path.expanduser("/tmp/wallpaper_shader.png")
 
     # Render single frame using ModernGL
     try:

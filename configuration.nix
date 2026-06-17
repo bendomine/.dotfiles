@@ -44,11 +44,11 @@
   # services.xserver.enable = true;
 
   # Hyprland
-  programs.hyprland = {
-    enable = true;
-    xwayland.enable = true;
-    withUWSM = true;
-  };
+  # programs.hyprland = {
+  #   enable = true;
+  #   xwayland.enable = true;
+  #   withUWSM = true;
+  # };
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
   hardware.graphics = {
     enable = true;
@@ -65,7 +65,10 @@
 
   xdg.portal = {
     enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-gtk ];
+    extraPortals = [
+      pkgs.xdg-desktop-portal-gtk
+      pkgs.xdg-desktop-portal-hyprland
+    ];
   };
   security.polkit.enable = true;
 

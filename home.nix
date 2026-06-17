@@ -4,6 +4,10 @@ let
   antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
   antigravityPkg = antigravityFlake.packages.${pkgs.system};
 
+  hyprlandPluginsFlake = builtins.getFlake "github:hyprwm/hyprland-plugins";
+  hyprlandPkg = hyprlandPluginsFlake.inputs.hyprland.packages.${pkgs.system}.hyprland;
+  hyprbarsPkg = hyprlandPluginsFlake.packages.${pkgs.system}.hyprbars;
+
   wallpaper-bin = pkgs.writers.writePython3Bin "wallpaper" {
     libraries = with pkgs.python3Packages; [requests moderngl numpy pillow];
   } (builtins.readFile ./wallpaper/wallpaper.py);
@@ -33,7 +37,10 @@ in
     # # "Hello, world!" when run.
     hello
     tree
+    hyprlandPkg
+    hyprbarsPkg
     fd
+    feh
     fastfetch
     spotify
     gh
@@ -74,6 +81,9 @@ in
     antigravityPkg.google-antigravity-ide
     antigravityPkg.google-antigravity-cli
     glslviewer
+    vips
+    gimp
+    unzip
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -161,6 +171,27 @@ in
     };
     Install = {
       WantedBy = [ "timers.target" ];
+    };
+  };
+
+  # Default applications
+  xdg = {
+    enable = true;
+
+    desktopEntries.emacsclient-custom = {
+      name = "Emacs Daemon Client";
+      exec = "emacsclient -n -a \"\" %F";
+      terminal = false;
+      categories = [ "Utility" "TextEditor" ];
+      mimeType = [ "text/plain" "text/markdown" ];
+    };
+
+    mimeApps = {
+      enable = true;
+      defaultApplications = {
+	"text/plain" = [ "emacsclient-custom.desktop" ];
+	"text/markdown" = [ "emacsclient-custom.desktop" ];
+      };
     };
   };
 

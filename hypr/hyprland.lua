@@ -175,8 +175,18 @@ hl.window_rule({
 hl.window_rule({
     name  = "no-gaps-f1",
     match = { float = false, workspace = "f[1]" },
-    border_size = 0,
+    border_size = 2,
     rounding    = 0,
+})
+
+hl.window_rule({
+    match = { workspace = "3" },
+    float = true,
+    no_follow_mouse = true
+})
+hl.layer_rule({
+    match = { namespace = "quickshell" },
+    blur = true
 })
 
 -- See https://wiki.hypr.land/Configuring/Layouts/Dwindle-Layout/ for more
@@ -279,7 +289,9 @@ hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("emacs"))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
-hl.bind(mainMod .. " + O", hl.dsp.layout("togglesplit"))    -- dwindle only
+hl.bind(mainMod .. " + I", hl.dsp.layout("togglesplit"))    -- dwindle only
+hl.bind(mainMod .. " + O", hl.dsp.layout("movetoroot active"))
+hl.bind(mainMod .. " + U", hl.dsp.layout("swapsplit"))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen())
 hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized" }))
 
