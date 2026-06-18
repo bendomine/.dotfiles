@@ -1,69 +1,40 @@
 import os
 import sys
-import time
-import requests
 import subprocess
 from random import random
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+from suntime import Sun
 import moderngl
 import numpy as np
 from PIL import Image
 
 # --- CONFIGURATION ---
-LAT = 38.6270  # Replace with your latitude
-LON = -90.1994  # Replace with your longitude
-MONITOR = "eDP-1"  # Replace with your active monitor
-WIDTH, HEIGHT = 1920, 1080  # Default resolution
+LAT = 38.6270
+LON = -90.1994
+MONITOR = "eDP-1"
+WIDTH, HEIGHT = 1920, 1080
 SHADER_FILE = os.path.expanduser("./main.frag")
 
-API_URL = (
-    f"https://api.open-meteo.com/v1/forecast?latitude={LAT}&longitude={LON}"
-    "&current_weather=true&daily=sunrise,sunset&timezone=auto"
-)
 
+def choose_color_mode():
+    """Returns 0 for sunrise, 1 for daytime, 2 for sunset, 3 for nighttime."""
+    sun = Sun(LAT, LON)
+    utc_sunrise = sun.get_sunrise_time()
+    utc_sunset = sun.get_sunset_time()
+    utc_time = datetime.now(timezone.utc)
 
-def time_to_fractional_day(dt):
-    """
-    Converts a datetime object or time string to a float between 0.0 and 1.0
-    representing the day.
-    """
-    if isinstance(dt, str):
-        # Open-Meteo returns ISO strings like "2026-06-14T05:42"
-        dt = datetime.fromisoformat(dt)
-    return (dt.hour * 3600 + dt.minute * 60 + dt.second) / 86400.0
+    sunrise_diff = utc_sunrise - utc_time
+    if abs(sunrise_diff / timedelta(minutes=1)) <= 30:
+        return 0
 
+    sunset_diff = utc_sunset - utc_time
+    if abs(sunset_diff / timedelta(minutes=1)) <= 30:
+        return 2
 
-def fetch_solar_and_weather():
-    try:
-        response = requests.get(API_URL, timeout=10).json()
+    if utc_time > utc_sunrise and utc_time < utc_sunset:
+        return 1
 
-        # 1. Weather code (WMO standard)
-        weather_code = float(response['current_weather']['weathercode'])
-
-        # 2. Current fractional time
-        # now_fraction = time_to_fractional_day(datetime.now())
-
-        # 3. Sunrise and Sunset fractional times
-        # Open-Meteo daily indices return arrays; index 0 is today
-        sunrise_str = response['daily']['sunrise'][0]
-        sunset_str = response['daily']['sunset'][0]
-
-        sunrise_fraction = time_to_fractional_day(sunrise_str)
-        sunset_fraction = time_to_fractional_day(sunset_str)
-
-        return {
-            "weather": weather_code,
-            "sunrise": sunrise_fraction,
-            "sunset": sunset_fraction
-        }
-    except Exception as e:
-        print(f"Error fetching atmospheric data: {e}", file=sys.stderr)
-        # Safe fallback values (Midday, clear sky, typical solar intervals)
-        return {
-            "weather": 0.0,
-            "sunrise": 0.25,  # ~6:00 AM
-            "sunset": 0.75    # ~6:00 PM
-        }
+    return 3
 
 
 def render_shader(shader_path, data, out_path):
@@ -71,12 +42,6 @@ def render_shader(shader_path, data, out_path):
 
     with open(shader_path, 'r') as f:
         frag_content = f.read()
-
-    # Prepare shader source for ModernGL (330 core)
-    # We add a header for compatibility with glslViewer-style shaders
-
-    # If the shader already has #version, we might need to be more careful,
-    # but for simple shaders this prepend works.
 
     vert_source = """
     #version 330
@@ -90,8 +55,8 @@ def render_shader(shader_path, data, out_path):
                        fragment_shader=frag_content)
 
     # Set uniforms safely
-    if 'u_time' in prog:
-        prog['u_time'].value = time.time() % 1000.0
+    # if 'u_time' in prog:
+    #     prog['u_time'].value = time.time() % 1000.0
 
     for key, value in data.items():
         if key in prog:
@@ -123,6 +88,7 @@ def render_shader(shader_path, data, out_path):
 
 
 def main():
+    print("Color mode:" + str(choose_color_mode()))
     if not os.path.exists(SHADER_FILE):
         print(f"Shader file not found at {SHADER_FILE}", file=sys.stderr)
         sys.exit(1)

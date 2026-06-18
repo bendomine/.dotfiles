@@ -4,9 +4,9 @@ let
   antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
   antigravityPkg = antigravityFlake.packages.${pkgs.system};
 
-  hyprlandPluginsFlake = builtins.getFlake "github:hyprwm/hyprland-plugins";
-  hyprlandPkg = hyprlandPluginsFlake.inputs.hyprland.packages.${pkgs.system}.hyprland;
-  hyprbarsPkg = hyprlandPluginsFlake.packages.${pkgs.system}.hyprbars;
+  # hyprlandPluginsFlake = builtins.getFlake "github:hyprwm/hyprland-plugins";
+  # hyprlandPkg = hyprlandPluginsFlake.inputs.hyprland.packages.${pkgs.system}.hyprland;
+  # hyprbarsPkg = hyprlandPluginsFlake.packages.${pkgs.system}.hyprbars;
 
   wallpaper-bin = pkgs.writers.writePython3Bin "wallpaper" {
     libraries = with pkgs.python3Packages; [requests moderngl numpy pillow];
@@ -37,8 +37,8 @@ in
     # # "Hello, world!" when run.
     hello
     tree
-    hyprlandPkg
-    hyprbarsPkg
+    # hyprlandPkg
+    # hyprbarsPkg
     fd
     feh
     fastfetch

@@ -15,7 +15,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "bendomine"; # Define your hostname.
 
   # Configure network connections interactively with nmcli or nmtui.
   networking.networkmanager.enable = true;
@@ -44,11 +44,11 @@
   # services.xserver.enable = true;
 
   # Hyprland
-  # programs.hyprland = {
-  #   enable = true;
-  #   xwayland.enable = true;
-  #   withUWSM = true;
-  # };
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+    withUWSM = true;
+  };
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
   hardware.graphics = {
     enable = true;
@@ -67,7 +67,7 @@
     enable = true;
     extraPortals = [
       pkgs.xdg-desktop-portal-gtk
-      pkgs.xdg-desktop-portal-hyprland
+      # pkgs.xdg-desktop-portal-hyprland
     ];
   };
   security.polkit.enable = true;
