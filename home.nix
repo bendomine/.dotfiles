@@ -70,6 +70,7 @@ in
     grimblast
     satty
     gemini-cli
+    claude-code
     heroic
     # antigravity
     domine
@@ -144,6 +145,7 @@ in
     "mako".source = link "${dotfilesDir}/mako";
     "kitty".source = link "${dotfilesDir}/kitty";
     "hypr".source = link "${dotfilesDir}/hypr";
+    "quickshell".source = link "${dotfilesDir}/quickshell";
   };
 
   # Cursor
