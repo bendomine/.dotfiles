@@ -2,20 +2,21 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, pkgs, ... }:
-
-{
+{ config, lib, pkgs, inputs, ... }: let
+  pkgs-unstable = inputs.hyprland.inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+in {
   imports =
     [ # Include the results of the hardware scan.
-      /etc/nixos/hardware-configuration.nix
-      <home-manager/nixos>
+      # /etc/nixos/hardware-configuration.nix
+      ./hardware-configuration.nix
+      # <home-manager/nixos>
     ];
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "bendomine"; # Define your hostname.
+  networking.hostName = "nixos"; # Define your hostname.
 
   # Configure network connections interactively with nmcli or nmtui.
   networking.networkmanager.enable = true;
@@ -46,13 +47,32 @@
   # Hyprland
   programs.hyprland = {
     enable = true;
+    package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
+    portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
     xwayland.enable = true;
     withUWSM = true;
   };
+  # nix.settings = {
+  #   substituters = ["https://hyprland.cachix.org"];
+  #   trusted-public-keys = 
+  # }
+
+  nix.settings = {
+    substituters = ["https://hyprland.cachix.org"];
+    trusted-substituters = ["https://hyprland.cachix.org"];
+    trusted-public-keys = ["hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="];
+    # Required so non-root users are allowed to use the above substituter/keys.
+    # Use @wheel for all sudo users, or list your username explicitly.
+    trusted-users = ["root" "@wheel"];
+  };
+
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
   hardware.graphics = {
+    package = pkgs-unstable.mesa;
+
     enable = true;
     enable32Bit = true;
+    package32 = pkgs-unstable.pkgsi686Linux.mesa;
   };
   hardware.nvidia = {
     modesetting.enable = true;
@@ -113,9 +133,9 @@
 
   programs.steam.enable = true;
   
-  home-manager.useGlobalPkgs = true;
-  home-manager.useUserPackages = true;
-  home-manager.users.ben = import ./home.nix;
+  # home-manager.useGlobalPkgs = true;
+  # home-manager.useUserPackages = true;
+  # home-manager.users.ben = import ./home.nix;
 
   # programs.firefox.enable = true;
 

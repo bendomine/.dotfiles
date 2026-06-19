@@ -1,12 +1,14 @@
-{ config, pkgs, ... }:
+{ config, pkgs, inputs, ... }:
 
 let
-  antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
-  antigravityPkg = antigravityFlake.packages.${pkgs.system};
+  # antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
+  # antigravityPkg = antigravityFlake.packages.${pkgs.system};
+  antigravityPkg = inputs.antigravity.packages.${pkgs.system};
 
   # hyprlandPluginsFlake = builtins.getFlake "github:hyprwm/hyprland-plugins";
   # hyprlandPkg = hyprlandPluginsFlake.inputs.hyprland.packages.${pkgs.system}.hyprland;
   # hyprbarsPkg = hyprlandPluginsFlake.packages.${pkgs.system}.hyprbars;
+  # hyprlandPkg = inputs.hyprland.packages.${pkgs.system};
 
   wallpaper-bin = pkgs.writers.writePython3Bin "wallpaper" {
     libraries = with pkgs.python3Packages; [requests moderngl numpy pillow];
@@ -84,6 +86,8 @@ in
     vips
     gimp
     unzip
+    ffmpegthumbnailer
+    ispell
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
