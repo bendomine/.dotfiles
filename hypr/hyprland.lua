@@ -45,6 +45,7 @@ local menu        = "hyprlauncher"
 hl.on("hyprland.start", function () 
 			    hl.exec_cmd("waybar & hyprpaper")
 			    hl.exec_cmd("blueman-applet")
+			    hl.exec_cmd("hyprctl plugin load \"$HYPR_PLUGIN_DIR/lib/libhyprbars.so\"")
 end)
 
 
@@ -219,8 +220,8 @@ hl.config({
 
 hl.config({
     misc = {
-        force_default_wallpaper = 1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
-        disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
+        force_default_wallpaper = 1,
+        disable_hyprland_logo   = false,
 	disable_splash_rendering = true,
     },
 })

@@ -2,13 +2,23 @@
 # your system. Help is available in the configuration.nix(5) man page, on
 # https://search.nixos.org/options and in the NixOS manual (`nixos-help`).
 
-{ config, lib, pkgs, inputs, ... }: let
+{ config, lib, pkgs, inputs, ... }:
+with lib; let
   pkgs-unstable = inputs.hyprland.inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+
+  hyprPluginPkgs = inputs.hyprland-plugins.packages.${pkgs.stdenv.hostPlatform.system};
+  hypr-plugin-dir = pkgs.symlinkJoin {
+    name = "hyprland-plugins";
+    paths = with hyprPluginPkgs; [
+      hyprbars
+    ];
+  };
 in {
   imports =
     [ # Include the results of the hardware scan.
       # /etc/nixos/hardware-configuration.nix
       ./hardware-configuration.nix
+      inputs.hyprland.nixosModules.default
       # <home-manager/nixos>
     ];
 
@@ -51,6 +61,10 @@ in {
     portalPackage = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
     xwayland.enable = true;
     withUWSM = true;
+
+    # plugins = [
+    #   inputs.hyprland-plugins.packages.${pkgs.system}.hyprbars
+    # ];
   };
   # nix.settings = {
   #   substituters = ["https://hyprland.cachix.org"];
@@ -67,6 +81,7 @@ in {
   };
 
   environment.sessionVariables.NIXOS_OZONE_WL = "1";
+  environment.sessionVariables.HYPR_PLUGIN_DIR = "${hypr-plugin-dir}/lib";
   hardware.graphics = {
     package = pkgs-unstable.mesa;
 
