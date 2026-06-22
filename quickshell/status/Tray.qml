@@ -1,6 +1,8 @@
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Effects
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 
@@ -8,13 +10,13 @@ Rectangle {
     required property var barWindow
     property real margin: 5
     property real animationLength: 200
+
     property bool showTray: trayHover.hovered || menuAnchor.visible
 
     id: root
     radius: 100
     implicitHeight: tray.implicitHeight + margin
-    implicitWidth: (showTray ? tray.implicitWidth : 20) + margin * 2
-    Behavior on implicitWidth { PropertyAnimation { duration: animationLength } }
+    implicitWidth: Math.max(tray.implicitWidth, 20) + margin * 2
     color: "#50000000"
 
     HoverHandler {
@@ -24,24 +26,21 @@ Rectangle {
 
     RowLayout {
 	id: tray
-	/* spacing: 5 */
 	spacing: 0
-	anchors.centerIn: parent
+	anchors.right: parent.right
+	anchors.rightMargin: margin
+	anchors.verticalCenter: parent.verticalCenter
 	QsMenuAnchor {
 	    id: menuAnchor
 	    anchor.window: barWindow
-	    anchor.rect.x: child.x
-	    anchor.rect.y: child.y
-	    anchor.rect.width: child.width
-	    anchor.rect.height: child.height
 	}
 	Repeater {
 	    model: SystemTray.items
 	    Rectangle {
 		id: child
-		/* implicitHeight: showTray ? trayItem.implicitWidth + margin : 0 */
 		implicitHeight: trayItem.implicitHeight + margin
 		implicitWidth: showTray ? trayItem.implicitWidth + margin : 0
+		clip: true
 
 		Behavior on implicitWidth { PropertyAnimation { duration: animationLength } }
 		
@@ -63,7 +62,33 @@ Rectangle {
 		    source: modelData.icon 
 		    implicitSize: 20
 		    anchors.centerIn: parent
+		    opacity: showTray ? 1 : 0
+		    Behavior on opacity { PropertyAnimation { duration: animationLength } }
 		}
+	    }
+	}
+	Rectangle {
+	    implicitWidth: 20
+	    implicitHeight: 20
+	    color: "transparent"
+	    IconImage {
+		id: trayArrow
+		source: Quickshell.iconPath("pan-down")
+		anchors.fill: parent
+		visible: false
+	    }
+	    MultiEffect {
+		source: trayArrow
+		anchors.fill: trayArrow
+		colorizationColor: "white"
+		colorization: 1
+		brightness: 1
+	    }
+	    transform: Rotation {
+		origin.x: 10
+		origin.y: 10
+		angle: showTray ? 90 : 0
+		Behavior on angle { PropertyAnimation { duration: animationLength } }
 	    }
 	}
     }

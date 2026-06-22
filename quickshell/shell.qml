@@ -1,4 +1,5 @@
 //@ pragma UseQApplication
+//@ pragma IconTheme Papirus
 import Quickshell // for PanelWindow
 import Quickshell.Hyprland
 import Quickshell.Bluetooth
