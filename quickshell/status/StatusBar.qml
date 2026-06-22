@@ -2,6 +2,7 @@ import Quickshell
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Hyprland
+import QtQuick.Controls
 import "./.."
 import "../shared"
 
@@ -26,8 +27,12 @@ PanelWindow {
 	    spacing: 10
 	    anchors.leftMargin: 10
 
+	    Text {
+		text: "󱄅"
+		font.pointSize: 15
+		color: "white"
+	    }
 	    Workspaces {}
-	    /* Text { text: "thing 2" } */
 	}
 
 	RowLayout {
@@ -45,8 +50,31 @@ PanelWindow {
 	    spacing: 10
 	    anchors.rightMargin: 10
 
-	    Text { text: "thing 5" }
-	    Text { text: "thing 6" }
+	    SystemClock {
+		precision: SystemClock.Seconds
+		id: clock
+	    }
+	    Text {
+		text: Qt.formatDate(clock.date, "ddd d MMM")
+	    }
+	    Text {
+		text: Qt.formatTime(clock.date, "h:mm AP")
+	    }
+	    RoundButton {
+		text: "󰂯"
+		font.pointSize: 13
+		implicitHeight: Math.max(implicitWidth, implicitHeight)
+		/* contentItem: Text { */
+		/*     text: "󰂯" */
+		/*     horizontalAlignment: Text.AlignHCenter */
+		/*     verticalAlignment: Text.AlignVCenter */
+		/*     font.pointSize: 15 */
+		/* } */
+		/* background: Rectangle { */
+		    
+		/* } */
+	    }
+	    Tray {barWindow: root}
 	}
 
     }

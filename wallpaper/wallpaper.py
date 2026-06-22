@@ -2,8 +2,8 @@ import os
 import sys
 import subprocess
 from random import random
-from datetime import datetime, timezone, timedelta
-from suntime import Sun
+# from datetime import datetime, timezone, timedelta
+# from suntime import Sun
 import moderngl
 import numpy as np
 from PIL import Image
@@ -16,25 +16,25 @@ WIDTH, HEIGHT = 1920, 1080
 SHADER_FILE = os.path.expanduser("./main.frag")
 
 
-def choose_color_mode():
-    """Returns 0 for sunrise, 1 for daytime, 2 for sunset, 3 for nighttime."""
-    sun = Sun(LAT, LON)
-    utc_sunrise = sun.get_sunrise_time()
-    utc_sunset = sun.get_sunset_time()
-    utc_time = datetime.now(timezone.utc)
+# def choose_color_mode():
+#     """Returns 0 for sunrise,1 for daytime, 2 for sunset, 3 for nighttime."""
+#     sun = Sun(LAT, LON)
+#     utc_sunrise = sun.get_sunrise_time()
+#     utc_sunset = sun.get_sunset_time()
+#     utc_time = datetime.now(timezone.utc)
 
-    sunrise_diff = utc_sunrise - utc_time
-    if abs(sunrise_diff / timedelta(minutes=1)) <= 30:
-        return 0
+#     sunrise_diff = utc_sunrise - utc_time
+#     if abs(sunrise_diff / timedelta(minutes=1)) <= 30:
+#         return 0
 
-    sunset_diff = utc_sunset - utc_time
-    if abs(sunset_diff / timedelta(minutes=1)) <= 30:
-        return 2
+#     sunset_diff = utc_sunset - utc_time
+#     if abs(sunset_diff / timedelta(minutes=1)) <= 30:
+#         return 2
 
-    if utc_time > utc_sunrise and utc_time < utc_sunset:
-        return 1
+#     if utc_time > utc_sunrise and utc_time < utc_sunset:
+#         return 1
 
-    return 3
+#     return 3
 
 
 def render_shader(shader_path, data, out_path):
@@ -88,7 +88,7 @@ def render_shader(shader_path, data, out_path):
 
 
 def main():
-    print("Color mode:" + str(choose_color_mode()))
+    # print("Color mode:" + str(choose_color_mode()))
     if not os.path.exists(SHADER_FILE):
         print(f"Shader file not found at {SHADER_FILE}", file=sys.stderr)
         sys.exit(1)

@@ -182,6 +182,11 @@ hl.window_rule({
     border_size = 2,
     rounding    = 0,
 })
+hl.window_rule({
+    name  = "hide-border-if-only",
+    match = { float = false, workspace = "f[1] w[1]" },
+    border_size = 0,
+})
 
 hl.window_rule({
     match = { workspace = "3" },

@@ -1,3 +1,4 @@
+//@ pragma UseQApplication
 import Quickshell // for PanelWindow
 import Quickshell.Hyprland
 import Quickshell.Bluetooth
