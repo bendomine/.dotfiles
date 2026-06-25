@@ -43,8 +43,9 @@ local menu        = "hyprlauncher"
 -- Or execute your favorite apps at launch like this:
 --
 hl.on("hyprland.start", function () 
-			    hl.exec_cmd("waybar & hyprpaper")
+			    hl.exec_cmd("hyprpaper")
 			    hl.exec_cmd("blueman-applet")
+			    hl.exec_cmd("qs")
 			    hl.exec_cmd("hyprctl plugin load \"$HYPR_PLUGIN_DIR/lib/libhyprbars.so\"")
 end)
 
@@ -189,7 +190,7 @@ hl.window_rule({
 })
 
 hl.window_rule({
-    match = { workspace = "3" },
+    match = { workspace = "1" },
     float = true,
     no_follow_mouse = true
 })
@@ -291,7 +292,7 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
+hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("emacsclient -c"))
 hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("emacs"))
@@ -321,6 +322,12 @@ for i = 1, 10 do
     hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
     hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }))
 end
+
+-- Resizing
+hl.bind(mainMod .. " + M", hl.dsp.layout("splitratio 2 exact"))
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.layout("splitratio 1 exact"))
+hl.bind(mainMod .. " + bracketleft", hl.dsp.layout("splitratio 0.5"))
+hl.bind(mainMod .. " + bracketright", hl.dsp.layout("splitratio -0.5"))
 
 -- Example special workspace (scratchpad)
 -- hl.bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))

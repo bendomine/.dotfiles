@@ -17,6 +17,7 @@ ShellRoot {
     readonly property var theme: Theme
     /* BluetoothPanel {} */
     StatusBar {}
+    /* Edges {} */
 
     /* FloatingWindow { */
     /* 	ColumnLayout { */

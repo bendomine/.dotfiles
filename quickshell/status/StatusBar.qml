@@ -33,6 +33,8 @@ PanelWindow {
 		color: "white"
 	    }
 	    Workspaces {}
+	    Item {id: bluetoothAnchor}
+	    Bluetooth {anchorPoint: bluetoothAnchor}
 	}
 
 	RowLayout {
@@ -40,8 +42,7 @@ PanelWindow {
 	    anchors.verticalCenter: parent.verticalCenter
 	    spacing: 10
 
-	    Text { text: "thing 3" }
-	    Text { text: "thing 4" }
+	    Media {}
 	}
 
 	RowLayout {
@@ -50,6 +51,8 @@ PanelWindow {
 	    spacing: 10
 	    anchors.rightMargin: 10
 
+	    Volume {}
+	    Battery {}
 	    SystemClock {
 		precision: SystemClock.Seconds
 		id: clock
@@ -59,20 +62,6 @@ PanelWindow {
 	    }
 	    Text {
 		text: Qt.formatTime(clock.date, "h:mm AP")
-	    }
-	    RoundButton {
-		text: "󰂯"
-		font.pointSize: 13
-		implicitHeight: Math.max(implicitWidth, implicitHeight)
-		/* contentItem: Text { */
-		/*     text: "󰂯" */
-		/*     horizontalAlignment: Text.AlignHCenter */
-		/*     verticalAlignment: Text.AlignVCenter */
-		/*     font.pointSize: 15 */
-		/* } */
-		/* background: Rectangle { */
-		    
-		/* } */
 	    }
 	    Tray {barWindow: root}
 	}

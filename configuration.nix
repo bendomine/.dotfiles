@@ -195,6 +195,9 @@ in {
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
+  # Allow power management
+  services.upower.enable = true;
+
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
   # networking.firewall.allowedUDPPorts = [ ... ];

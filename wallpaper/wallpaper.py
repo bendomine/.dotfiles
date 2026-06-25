@@ -4,6 +4,7 @@ import subprocess
 from random import random
 # from datetime import datetime, timezone, timedelta
 # from suntime import Sun
+import time
 import moderngl
 import numpy as np
 from PIL import Image
@@ -55,8 +56,8 @@ def render_shader(shader_path, data, out_path):
                        fragment_shader=frag_content)
 
     # Set uniforms safely
-    # if 'u_time' in prog:
-    #     prog['u_time'].value = time.time() % 1000.0
+    if 'u_time' in prog:
+        prog['u_time'].value = time.time() % 1000.0
 
     for key, value in data.items():
         if key in prog:
