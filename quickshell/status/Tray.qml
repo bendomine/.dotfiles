@@ -11,6 +11,11 @@ Item {
     property real margin: 5
     property real animationLength: 200
     property bool showTray: trayHover.hovered || menuAnchor.visible
+    property list<string> menuIds: [
+	"Antigravity_status_icon_1",
+	"spotify-client",
+	"steam"
+    ]
     height: 20 + margin * 2
     width: 20 + margin * 2
 
@@ -54,7 +59,7 @@ Item {
 			cursorShape: Qt.PointingHandCursor
 			acceptedButtons: Qt.LeftButton | Qt.RightButton
 			onClicked: (mouse) => {
-			    if (modelData.onlyMenu || (modelData.hasMenu && mouse.button == Qt.RightButton)) {
+			    if (modelData.onlyMenu || (modelData.hasMenu && mouse.button == Qt.RightButton) || menuIds.includes(modelData.id)) {
 				var mapped = child.mapToItem(null, mouse.x, mouse.y)
 				menuAnchor.anchor.rect.x = mapped.x
 				menuAnchor.anchor.rect.y = mapped.y

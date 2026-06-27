@@ -1,6 +1,7 @@
 import Quickshell
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 
 PopupWindow {
     id: root 
@@ -10,6 +11,7 @@ PopupWindow {
     property real yOffset: -iconSize / 2
     property real dWidth: 200
     property real dHeight: 300
+    property real animDuration: 300
     property real animProgress: displayHandler.hovered ? 1.0 : -0.1
     property bool displayWindow: animProgress > -0.1
 
@@ -29,34 +31,51 @@ PopupWindow {
     }
 
     Behavior on animProgress { NumberAnimation {
-	duration: 300
+	duration: animDuration
 	easing.type: Easing.OutQuart
     } }
 
-    HoverHandler {
-	id: displayHandler
-    }
-
     Rectangle {
+	HoverHandler {
+	    id: displayHandler
+	}
 	clip: true
 	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
 	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
-	color: "white"
+	color: displayHandler.hovered ? "white" : "#8F666666"
 	radius: iconSize / 2
 
-	RowLayout {
-	    Rectangle {
-		color: "transparent"
-		Layout.preferredWidth: iconSize
-		Layout.preferredHeight: iconSize
-		Text {
-		    anchors.centerIn: parent
-		    text: "󰂯"
-		    font.pointSize: 12
+	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
+
+	ColumnLayout {
+	    anchors.left: parent.left
+	    anchors.right: parent.right
+	    spacing: 1
+	    RowLayout {
+		Rectangle {
+		    color: "transparent"
+		    Layout.preferredWidth: iconSize
+		    Layout.preferredHeight: iconSize
+		    Text {
+			anchors.centerIn: parent
+			text: "󰂯"
+			font.pointSize: 12
+		    }
 		}
+		Text { text: "Bluetooth Settings" }
 	    }
-	    Text {
-		text: "Bluetooth Settings"
+
+	    ColumnLayout {
+		Layout.alignment: Qt.AlignHCenter
+		Layout.maximumWidth: parent.width - 10
+		Rectangle {
+		    Layout.fillWidth: true
+		    color: "lightgrey"
+		    implicitHeight: 2
+		}
+		Text {
+		    text: "this is a test"
+		}
 	    }
 	}
     }
