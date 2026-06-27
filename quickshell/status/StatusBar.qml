@@ -32,9 +32,9 @@ PanelWindow {
 		font.pointSize: 15
 		color: "white"
 	    }
-	    Workspaces {}
+	    Workspaces {id: workspaces}
 	    Item {id: bluetoothAnchor}
-	    Bluetooth {anchorPoint: bluetoothAnchor}
+	    Bluetooth {anchorPoint: bluetoothAnchor; iconSize: workspaces.height}
 	}
 
 	RowLayout {

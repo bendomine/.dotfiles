@@ -326,8 +326,8 @@ end
 -- Resizing
 hl.bind(mainMod .. " + M", hl.dsp.layout("splitratio 2 exact"))
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.layout("splitratio 1 exact"))
-hl.bind(mainMod .. " + bracketleft", hl.dsp.layout("splitratio 0.5"))
-hl.bind(mainMod .. " + bracketright", hl.dsp.layout("splitratio -0.5"))
+hl.bind(mainMod .. " + bracketleft", hl.dsp.layout("splitratio -0.5"))
+hl.bind(mainMod .. " + bracketright", hl.dsp.layout("splitratio 0.5"))
 
 -- Example special workspace (scratchpad)
 -- hl.bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))

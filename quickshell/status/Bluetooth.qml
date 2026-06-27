@@ -1,99 +1,63 @@
 import Quickshell
 import QtQuick
+import QtQuick.Layouts
 
 PopupWindow {
-    id: root
+    id: root 
     required property Item anchorPoint
-    property real xOffset: -icon.implicitWidth / 2 + margin * 2 + 7
-    property real yOffset: -icon.implicitHeight / 2
-    property real margin: 1
-    property bool displayed
-    property real dWidth: 100
+    required property real iconSize
+    property real xOffset: -iconSize / 2 + 10
+    property real yOffset: -iconSize / 2
+    property real dWidth: 200
     property real dHeight: 300
-    
+    property real animProgress: displayHandler.hovered ? 1.0 : -0.1
+    property bool displayWindow: animProgress > -0.1
+
     anchor.item: anchorPoint
     anchor.rect.x: xOffset
     anchor.rect.y: yOffset
-    /* implicitWidth: displayHandler.hovered ? 100 : icon.implicitWidth */
-    /* implicitHeight: displayHandler.hovered ? 300 : icon.implicitHeight */
-    color: "white"
     visible: true
-    
+    color: "transparent"
+
+    implicitWidth: displayWindow ? dWidth : iconSize + 2
+    implicitHeight: displayWindow ? dHeight : iconSize + 2
+
+    function mix(x, y, a, b) {
+	a /= b;
+	a = Math.min(Math.max(a, 0.0), 1.0);
+	return x * (1 - a) + y * a;
+    }
+
+    Behavior on animProgress { NumberAnimation {
+	duration: 300
+	easing.type: Easing.OutQuart
+    } }
+
     HoverHandler {
 	id: displayHandler
     }
 
     Rectangle {
-        id: icon
-	anchors.left: parent.left
-	anchors.top: parent.top
-	color: "#50000000"
-	property real dimension: Math.max(iconText.implicitWidth, iconText.implicitHeight)
-	implicitWidth: dimension + margin * 2
-	implicitHeight: dimension + margin * 2
-	radius: dimension + margin
+	clip: true
+	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
+	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
+	color: "white"
+	radius: iconSize / 2
 
-	state: displayHandler.hovered ? "DISPLAYED" : "COLLAPSED"
-	states: [
-	    State {
-		name: "DISPLAYED"
-		PropertyChanges {
-		    root {
-			implicitWidth: dWidth
-			implicitHeight: dHeight
-		    }
-		}
-	    },
-	    State {
-		name: "COLLAPSED"
-		PropertyChanges {
-		    root {
-			implicitWidth: icon.implicitWidth
-			implicitHeight: icon.implicitHeight
-		    }
+	RowLayout {
+	    Rectangle {
+		color: "transparent"
+		Layout.preferredWidth: iconSize
+		Layout.preferredHeight: iconSize
+		Text {
+		    anchors.centerIn: parent
+		    text: "󰂯"
+		    font.pointSize: 12
 		}
 	    }
-	]
-
-	transitions: [
-	    Transition {
-		to: "DISPLAYED"
-		SequentialAnimation {
-		    NumberAnimation {
-			target: root
-			property: "implicitWidth"
-			duration: dWidth * 5
-		    }
-		    NumberAnimation {
-			target: root
-			property: "implicitHeight"
-			duration: dHeight * 5
-		    }
-		}
-	    },
-	    Transition {
-		from: "DISPLAYED"
-		SequentialAnimation {
-		    NumberAnimation {
-			target: root
-			property: "implicitHeight"
-			duration: dHeight * 5
-		    }
-		    NumberAnimation {
-			target: root
-			property: "implicitWidth"
-			duration: dWidth * 5
-		    }
-		}
+	    Text {
+		text: "Bluetooth Settings"
 	    }
-	]
-	
-	Text {
-	    anchors.margins: margin
-	    anchors.centerIn: parent
-	    id: iconText
-	    text: "󰂯"
-	    font.pointSize: 13.5
 	}
     }
 }
