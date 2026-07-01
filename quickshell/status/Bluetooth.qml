@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -15,6 +16,8 @@ PopupWindow {
     property real animProgress: displayHandler.hovered ? 1.0 : -0.1
     property bool displayWindow: animProgress > -0.1
 
+    onDisplayWindowChanged: Bluetooth.defaultAdapter.discovering = displayWindow
+
     anchor.item: anchorPoint
     anchor.rect.x: xOffset
     anchor.rect.y: yOffset
@@ -30,6 +33,13 @@ PopupWindow {
 	return x * (1 - a) + y * a;
     }
 
+    function isNameless(device) {
+	return false
+	if (!device || !device.name) return true;
+	const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/i;
+	return device.name.trim() === "" || macAddressRegex.test(device.name);
+    }
+
     Behavior on animProgress { NumberAnimation {
 	duration: animDuration
 	easing.type: Easing.OutQuart
@@ -42,7 +52,7 @@ PopupWindow {
 	clip: true
 	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
 	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
-	color: displayHandler.hovered ? "white" : "#8F666666"
+	color: displayHandler.hovered ? "white" : "#50000000"
 	radius: iconSize / 2
 
 	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
@@ -73,8 +83,21 @@ PopupWindow {
 		    color: "lightgrey"
 		    implicitHeight: 2
 		}
-		Text {
-		    text: "this is a test"
+		Text { text: "Known Devices" }
+		Repeater {
+		    model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+		    delegate: Device {
+			device: modelData
+			visible: modelData.trusted
+		    }
+		}
+		Text { text: "Other Devices" }
+		Repeater {
+		    model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+		    delegate: Device {
+			device: modelData
+			visible: !modelData.trusted && !isNameless(modelData)
+		    }
 		}
 	    }
 	}
