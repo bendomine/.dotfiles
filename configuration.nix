@@ -144,9 +144,11 @@ in {
     description = "Ben Domine";
     extraGroups = [ "networkManager" "wheel" "dialout" "input" ]; # Enable ‘sudo’ for the user.
     initialPassword = "password";
+    shell = pkgs.zsh;
   };
 
   programs.steam.enable = true;
+  programs.zsh.enable = true;
   
   # home-manager.useGlobalPkgs = true;
   # home-manager.useUserPackages = true;

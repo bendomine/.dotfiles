@@ -3,7 +3,7 @@
 let
   # antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
   # antigravityPkg = antigravityFlake.packages.${pkgs.system};
-  antigravityPkg = inputs.antigravity.packages.${pkgs.system};
+  antigravityPkg = inputs.antigravity.packages.${pkgs.stdenv.hostPlatform.system};
 
   # hyprlandPluginsFlake = builtins.getFlake "github:hyprwm/hyprland-plugins";
   # hyprlandPkg = hyprlandPluginsFlake.inputs.hyprland.packages.${pkgs.system}.hyprland;
@@ -33,7 +33,6 @@ in
   
   # The home.packages option allows you to install Nix packages into your
   # environment.
-  nixpkgs.config.allowUnfree = true;
   home.packages = with pkgs; [
     # # Adds the 'hello' command to your environment. It prints a friendly
     # # "Hello, world!" when run.
@@ -94,6 +93,12 @@ in
     openconnect
     kitty.terminfo
     btop
+    (texliveBasic.withPackages (
+      ps: with ps; [
+	dvisvgm dvipng
+	wrapfig amsmath ulem hyperref capt-of
+      ]
+    ))
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -118,6 +123,28 @@ in
       name = "Ben Domine"; 
       email = "ben.w.domine@gmail.com";
     };
+  };
+  programs.zsh = {
+    enable = true;  
+    enableCompletion = true;
+    autosuggestion.enable = true;
+    syntaxHighlighting.enable = true;
+    dotDir = "${config.xdg.configHome}/zsh";
+
+    initContent = ''
+      echo
+      fastfetch
+
+      if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
+        export KITTY_SHELL_INTEGRATION="enabled"
+	source "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty-integration"
+      fi
+
+      alias hms="home-manager switch -f ~/.dotfiles/home.nix"
+      alias nrs="sudo nixos-rebuild switch --flake ~/.dotfiles#$(hostname)"
+
+      export EDITOR="emacsclient -c"
+    '';
   };
   programs.quickshell.enable = true;
 
@@ -152,6 +179,7 @@ in
     "hypr".source = link "${dotfilesDir}/hypr";
     "quickshell".source = link "${dotfilesDir}/quickshell";
     "btop".source = link "${dotfilesDir}/btop";
+    "gtk-3.0".source = link "${dotfilesDir}/gtk-3.0";
   };
 
   # Cursor

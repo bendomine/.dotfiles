@@ -34,7 +34,6 @@ PopupWindow {
     }
 
     function isNameless(device) {
-	return false
 	if (!device || !device.name) return true;
 	const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/i;
 	return device.name.trim() === "" || macAddressRegex.test(device.name);
