@@ -32,7 +32,7 @@ Rectangle {
 	    implicitWidth: 17
 	    implicitHeight: 17
 	    radius: 20
-	    color: "blue"
+	    color: "transparent"
 	    Text {
 		id: deviceIcon
 		anchors.centerIn: parent

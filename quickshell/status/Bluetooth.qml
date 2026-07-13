@@ -18,6 +18,19 @@ PopupWindow {
 
     onDisplayWindowChanged: Bluetooth.defaultAdapter.discovering = displayWindow
 
+    Connections {
+	target: anchorPoint
+	function onXChanged() {
+	    if (root.anchor && root.anchor.updateAnchor){
+		root.anchor.updateAnchor();
+	    }
+	}
+	function onYChanged() {
+	    if (root.anchor && root.anchor.updateAnchor){
+		root.anchor.updateAnchor();
+	    }
+	}
+    }
     anchor.item: anchorPoint
     anchor.rect.x: xOffset
     anchor.rect.y: yOffset

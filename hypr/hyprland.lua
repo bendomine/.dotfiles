@@ -100,6 +100,7 @@ hl.config({
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
         resize_on_border = true,
+	extend_border_grab_area = 8,
 
         -- Please see https://wiki.hypr.land/Configuring/Advanced-and-Cool/Tearing/ before you turn this on
         allow_tearing = false,
@@ -265,6 +266,10 @@ hl.config({
 	    clickfinger_behavior = true,
 	    disable_while_typing = false,
         },
+    },
+
+    gestures = {
+	workspace_swipe_use_r = true,
     },
 })
 

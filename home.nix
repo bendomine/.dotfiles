@@ -38,6 +38,7 @@ in
     # # "Hello, world!" when run.
     hello
     tree
+    aalib
     # hyprlandPkg
     # hyprbarsPkg
     fd
@@ -97,6 +98,7 @@ in
       ps: with ps; [
 	dvisvgm dvipng
 	wrapfig amsmath ulem hyperref capt-of
+	physics
       ]
     ))
     # # It is sometimes useful to fine-tune packages, for example, by applying
@@ -132,21 +134,23 @@ in
     dotDir = "${config.xdg.configHome}/zsh";
 
     initContent = ''
-      echo
-      fastfetch
+echo
+fastfetch
+if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
+  export KITTY_SHELL_INTEGRATION="enabled"
+  source "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty-integration"
+fi
 
-      if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
-        export KITTY_SHELL_INTEGRATION="enabled"
-	source "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty-integration"
-      fi
-
-      alias hms="home-manager switch -f ~/.dotfiles/home.nix"
-      alias nrs="sudo nixos-rebuild switch --flake ~/.dotfiles#$(hostname)"
-
-      export EDITOR="emacsclient -c"
+export EDITOR="emacsclient -c"
+setopt aliases
     '';
+
+    shellAliases = {
+      nrs = "sudo nixos-rebuild switch --flake \"$HOME/.dotfiles#$(hostname)\"";
+    };
   };
   programs.quickshell.enable = true;
+  programs.starship.enable = true;
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
@@ -180,6 +184,7 @@ in
     "quickshell".source = link "${dotfilesDir}/quickshell";
     "btop".source = link "${dotfilesDir}/btop";
     "gtk-3.0".source = link "${dotfilesDir}/gtk-3.0";
+    "starship.toml".source = link "${dotfilesDir}/starship.toml";
   };
 
   # Cursor
@@ -188,7 +193,7 @@ in
     x11.enable = true;
     package = pkgs.capitaine-cursors;
     name = "capitaine-cursors";
-    size = 36;
+    size = 24;
   };
 
   systemd.user.services.wallpaper = {
@@ -254,6 +259,8 @@ in
   home.sessionVariables = {
     EDITOR = "emacs -c";
     XDG_DATA_DIRS = "$XDG_DATA_DIRS:$HOME/.nix-profile/share:/run/current-system/sw/share";
+    XCURSOR_SIZE = "24";
+    HYPRCURSOR_SIZE = "24";
   };
 
   # Let Home Manager install and manage itself.

@@ -18,8 +18,8 @@ Rectangle {
 	    model: Hyprland.workspaces
 	    Rectangle {
 		id: child
-		implicitHeight: workspaceLabel.implicitWidth + margin
-		implicitWidth: workspaceLabel.implicitWidth + margin
+		implicitHeight: 12.5
+		implicitWidth: 12.5
 		color: "transparent"
 		MouseArea {
 		    anchors.fill: parent
