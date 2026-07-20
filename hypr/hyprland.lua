@@ -193,7 +193,8 @@ hl.window_rule({
 hl.window_rule({
     match = { workspace = "1" },
     float = true,
-    no_follow_mouse = true
+    no_follow_mouse = true,
+    size = { 800, 500 },
 })
 hl.layer_rule({
     match = { namespace = "quickshell" },

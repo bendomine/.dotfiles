@@ -21,13 +21,9 @@ PopupWindow {
     Connections {
 	target: anchorPoint
 	function onXChanged() {
-	    if (root.anchor && root.anchor.updateAnchor){
-		root.anchor.updateAnchor();
-	    }
-	}
-	function onYChanged() {
-	    if (root.anchor && root.anchor.updateAnchor){
-		root.anchor.updateAnchor();
+	    if (!root.displayWindow) {
+		root.visible = false
+		Qt.callLater(() => root.visible = true)
 	    }
 	}
     }
@@ -70,8 +66,7 @@ PopupWindow {
 	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
 
 	ColumnLayout {
-	    anchors.left: parent.left
-	    anchors.right: parent.right
+	    anchors.fill: parent
 	    spacing: 1
 	    RowLayout {
 		Rectangle {
@@ -87,28 +82,43 @@ PopupWindow {
 		Text { text: "Bluetooth Settings" }
 	    }
 
-	    ColumnLayout {
+	    Rectangle {
 		Layout.alignment: Qt.AlignHCenter
 		Layout.maximumWidth: parent.width - 10
-		Rectangle {
-		    Layout.fillWidth: true
-		    color: "lightgrey"
-		    implicitHeight: 2
-		}
-		Text { text: "Known Devices" }
-		Repeater {
-		    model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
-		    delegate: Device {
-			device: modelData
-			visible: modelData.trusted
+		Layout.fillWidth: true
+		color: "lightgrey"
+		implicitHeight: 2
+	    }
+
+	    ScrollView {
+		id: scrollView
+		Layout.fillWidth: true
+		Layout.fillHeight: true
+		Layout.alignment: Qt.AlignHCenter
+		Layout.maximumWidth: parent.width - 10
+		clip: true
+		ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+
+		ColumnLayout {
+		    width: scrollView.availableWidth
+		    Text {
+			text: "Known Devices"
+			Layout.topMargin: 5
 		    }
-		}
-		Text { text: "Other Devices" }
-		Repeater {
-		    model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
-		    delegate: Device {
-			device: modelData
-			visible: !modelData.trusted && !isNameless(modelData)
+		    Repeater {
+			model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+			delegate: Device {
+			    device: modelData
+			    visible: modelData.trusted
+			}
+		    }
+		    Text { text: "Other Devices" }
+		    Repeater {
+			model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+			delegate: Device {
+			    device: modelData
+			    visible: !modelData.trusted && !isNameless(modelData)
+			}
 		    }
 		}
 	    }
