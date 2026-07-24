@@ -20,6 +20,18 @@ Rectangle {
 	id: hover
 	cursorShape: Qt.PointingHandCursor
     }
+    TapHandler {
+	onTapped: {
+	    if (!device) return;
+
+	    if (device.connected) device.disconnect();
+	    
+	    else {
+		device.trusted = true;
+		device.connect();
+	    }
+	}
+    }
     
     RowLayout {
 	id: content

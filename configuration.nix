@@ -36,6 +36,8 @@ in {
   services.automatic-timezoned.enable = true;
   services.timesyncd.enable = true;
 
+  services.logind.powerKey = "ignore";
+
   # Experimental cli
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 

@@ -9,18 +9,19 @@ Text {
     Connections {
 	target: UPower.displayDevice
 	function onPercentageChanged() {
-	    if (target.state == "Discharging") {
+	    // Charging: 1, discharging: 2
+	    if (target.state == 2) {
 		if (target.percentage <= 0.05 && !notified5) {
-		    notified15 = true;
-		    notify15.startDetached();
-		}
-		else if (target.percentage <= 0.15 && !notified15){
 		    notified5 = true;
 		    notify5.startDetached();
 		}
+		else if (target.percentage <= 0.15 && !notified15){
+		    notified15 = true;
+		    notify15.startDetached();
+		}
 	    }
 
-	    else if (target.state == "Charging") {
+	    else if (target.state.toString() == 1) {
 		if (target.percentage > 0.05) notified5 = false;
 		if (target.percentage > 0.15) notified15 = false;
 	    }

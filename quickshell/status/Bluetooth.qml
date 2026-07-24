@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Bluetooth
+import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -12,7 +13,7 @@ PopupWindow {
     property real yOffset: -iconSize / 2
     property real dWidth: 200
     property real dHeight: 300
-    property real animDuration: 300
+    property real animDuration: 500
     property real animProgress: displayHandler.hovered ? 1.0 : -0.1
     property bool displayWindow: animProgress > -0.1
 
@@ -61,9 +62,13 @@ PopupWindow {
 	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
 	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
 	color: displayHandler.hovered ? "white" : "#50000000"
+	/* color: "#FFFFFFFE" */
 	radius: iconSize / 2
+	border.color: displayHandler.hovered ? "#AAAAA0" : "transparent"
+	border.width: 1
 
 	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
+	/* Behavior on border.color {ColorAnimation {duration: animDuration * 10.67}} */
 
 	ColumnLayout {
 	    anchors.fill: parent
@@ -100,7 +105,34 @@ PopupWindow {
 		ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
 		ColumnLayout {
+		    property int connectedDevices: 0
+
 		    width: scrollView.availableWidth
+		    Text {
+			text: "Connected"
+			Layout.topMargin: 5
+			/* visible: parent.connectedDevices > 0 */
+		    }
+		    Repeater {
+			model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+			delegate: Device {
+			    device: modelData
+			    visible: modelData.connected
+
+			    onVisibleChanged: {
+				if (visible) parent.connectedDevices ++;
+				else parent.connectedDevices --;
+			    }
+
+			    Component.onCompleted: {
+				if (visible) parent.connectedDevices ++;
+			    }
+
+			    Component.onDestruction: {
+				if (visible) parent.connectedDevices --;
+			    }
+			}
+		    }
 		    Text {
 			text: "Known Devices"
 			Layout.topMargin: 5
@@ -109,7 +141,7 @@ PopupWindow {
 			model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
 			delegate: Device {
 			    device: modelData
-			    visible: modelData.trusted
+			    visible: modelData.trusted && !modelData.connected
 			}
 		    }
 		    Text { text: "Other Devices" }
@@ -118,6 +150,7 @@ PopupWindow {
 			delegate: Device {
 			    device: modelData
 			    visible: !modelData.trusted && !isNameless(modelData)
+			                                && !modelData.connected
 			}
 		    }
 		}
