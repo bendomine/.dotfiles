@@ -1,6 +1,7 @@
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -14,8 +15,9 @@ PopupWindow {
     property real dWidth: 200
     property real dHeight: 300
     property real animDuration: 500
-    property real animProgress: displayHandler.hovered ? 1.0 : -0.1
+    property real animProgress: windowActive ? 1.0 : -0.1
     property bool displayWindow: animProgress > -0.1
+    property bool windowActive
 
     onDisplayWindowChanged: Bluetooth.defaultAdapter.discovering = displayWindow
 
@@ -57,14 +59,18 @@ PopupWindow {
     Rectangle {
 	HoverHandler {
 	    id: displayHandler
+	    onHoveredChanged: {
+		if (hovered) windowActive = true;
+		else windowActive = false;
+	    }
 	}
 	clip: true
 	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
 	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
-	color: displayHandler.hovered ? "white" : "#50000000"
+	color: windowActive ? "white" : "#50000000"
 	/* color: "#FFFFFFFE" */
 	radius: iconSize / 2
-	border.color: displayHandler.hovered ? "#AAAAA0" : "transparent"
+	border.color: windowActive ? "#AAAAA0" : "transparent"
 	border.width: 1
 
 	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
@@ -105,32 +111,24 @@ PopupWindow {
 		ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
 		ColumnLayout {
-		    property int connectedDevices: 0
-
+		    id: devicesContainer
+		    
 		    width: scrollView.availableWidth
+
+		    property int focusIdx: -1
+		    
 		    Text {
 			text: "Connected"
 			Layout.topMargin: 5
-			/* visible: parent.connectedDevices > 0 */
+			visible: connectedDevices.count > 0
 		    }
 		    Repeater {
-			model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+			id: connectedDevices
+			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>
+			    {return device.connected})
 			delegate: Device {
 			    device: modelData
-			    visible: modelData.connected
-
-			    onVisibleChanged: {
-				if (visible) parent.connectedDevices ++;
-				else parent.connectedDevices --;
-			    }
-
-			    Component.onCompleted: {
-				if (visible) parent.connectedDevices ++;
-			    }
-
-			    Component.onDestruction: {
-				if (visible) parent.connectedDevices --;
-			    }
+			    active: index == devicesContainer.focusIdx
 			}
 		    }
 		    Text {
@@ -138,23 +136,67 @@ PopupWindow {
 			Layout.topMargin: 5
 		    }
 		    Repeater {
-			model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+			id: knownDevices
+			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>
+			    {return device.trusted && !device.connected})
 			delegate: Device {
 			    device: modelData
-			    visible: modelData.trusted && !modelData.connected
+			    active: connectedDevices.count + index == devicesContainer.focusIdx
 			}
 		    }
 		    Text { text: "Other Devices" }
 		    Repeater {
-			model: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []
+			id: otherDevices
+			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>
+			    {return !device.trusted && !isNameless(device) && !device.connected})
 			delegate: Device {
 			    device: modelData
-			    visible: !modelData.trusted && !isNameless(modelData)
-			                                && !modelData.connected
+			    active: connectedDevices.count + knownDevices.count + index == devicesContainer.focusIdx
 			}
 		    }
 		}
 	    }
 	}
+    }
+    GlobalShortcut {
+	description: "Toggles the bluetooth menu"
+	name: "toggle-bluetooth"
+	onPressed: windowActive = !windowActive;
+    }
+    Shortcut {
+	sequence: "j"
+	onActivated: {
+	    devicesContainer.focusIdx ++;
+	    if (devicesContainer.focusIdx >= connectedDevices.count + knownDevices.count + otherDevices.count)
+		devicesContainer.focusIdx = 0;
+	}
+    }
+    Shortcut {
+	sequence: "k"
+	onActivated: {
+	    devicesContainer.focusIdx --;
+	    if (devicesContainer.focusIdx < 0)
+		devicesContainer.focusIdx = connectedDevices.count + knownDevices.count + otherDevices.count - 1
+	}
+    }
+    Shortcut {
+	sequences: ["Space", "Return"]
+	onActivated: {
+	    if (devicesContainer.focusIdx < 0) return;
+	    if (devicesContainer.focusIdx < connectedDevices.count)
+		connectedDevices.itemAt(devicesContainer.focusIdx).action();
+	    else if (devicesContainer.focusIdx < knownDevices.count + connectedDevices.count)
+		knownDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count).action();
+	    else otherDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count - knownDevices.count).action();
+	}
+    }
+    onWindowActiveChanged: {
+	grab.active = windowActive;
+	devicesContainer.focusIdx = -1;
+    }
+    HyprlandFocusGrab {
+	id: grab
+	windows: [ root ]
+	active: false
     }
 }

@@ -369,6 +369,9 @@ hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = tr
 hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("grimblast copy area"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("GRIMBLAST_EDITOR=\"satty --filename\" grimblast edit area"))
 
+-- Custom
+hl.bind(mainMod .. " + b", hl.dsp.global("quickshell:toggle-bluetooth"))
+
 
 --------------------------------
 ---- WINDOWS AND WORKSPACES ----

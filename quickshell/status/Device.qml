@@ -7,32 +7,34 @@ Rectangle {
     property BluetoothDevice device
     property string name: device ? device.name : ""
     property real margin: 5
+    property bool active: false
 
     implicitWidth: content.implicitWidth + margin * 2
     implicitHeight: content.implicitHeight + margin * 2
     Layout.fillWidth: true
 
-    color: hover.hovered ? "#8F666666" : "transparent"
+    color: hover.hovered || active ? "#8F666666" : "transparent"
     Behavior on color { ColorAnimation { duration: 150 } }
     radius: 5
+
+    function action() {
+	if (!device) return;
+
+	if (device.connected) device.disconnect();
+	
+	else {
+	    device.trusted = true;
+	    device.connect();
+	}
+    }
 
     HoverHandler {
 	id: hover
 	cursorShape: Qt.PointingHandCursor
     }
     TapHandler {
-	onTapped: {
-	    if (!device) return;
-
-	    if (device.connected) device.disconnect();
-	    
-	    else {
-		device.trusted = true;
-		device.connect();
-	    }
-	}
+	onTapped: action()
     }
-    
     RowLayout {
 	id: content
 
