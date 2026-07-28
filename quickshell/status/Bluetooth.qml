@@ -141,6 +141,7 @@ PopupWindow {
 		    Text {
 			text: "Known Devices"
 			Layout.topMargin: 5
+			visible: knownDevices.count > 0
 			color: root.fontColor
 		    }
 		    Repeater {
@@ -153,7 +154,11 @@ PopupWindow {
 			    fontColor: root.fontColor
 			}
 		    }
-		    Text { text: "Other Devices"; color: root.fontColor }
+		    Text {
+			text: "Other Devices"
+			color: root.fontColor
+			visible: otherDevices.count > 0
+		    }
 		    Repeater {
 			id: otherDevices
 			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>

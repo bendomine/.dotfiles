@@ -19,6 +19,7 @@ in {
       # /etc/nixos/hardware-configuration.nix
       ./hardware-configuration.nix
       inputs.hyprland.nixosModules.default
+      ./acer-rgb.nix
       # <home-manager/nixos>
     ];
 
@@ -134,6 +135,7 @@ in {
   # VPN
   services.tailscale.enable = true;
 
+  # Keyboard rgb
 
   environment.pathsToLink = [ "/share/icons" ];
   

@@ -3,3 +3,6 @@
 
 * Overview
 These are the dotfiles for my NixOS setup. This repo should contain everything I need to replicate my setup.
+
+* Important Notes
+- The file [[file:acer-rgb.nix]] is intended solely for acer nitro laptops. On other computers, this is irrelevant, so remove the import statement in [[file:configuration.nix]].
