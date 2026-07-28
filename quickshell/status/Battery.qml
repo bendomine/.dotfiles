@@ -3,7 +3,27 @@ import Quickshell.Io
 import QtQuick
 
 Text {
-    text: "Battery: " + (UPower.displayDevice.percentage * 100).toFixed() + "%"
+    property real percentage: UPower.displayDevice.percentage
+    property int state: UPower.displayDevice.state
+    property string icon: {
+        if (state == 1) return "󰂄"
+        if (percentage >= 0.95) return "󰁹"
+        if (percentage >= 0.90) return "󰂂"
+        if (percentage >= 0.80) return "󰂁"
+        if (percentage >= 0.70) return "󰂀"
+        if (percentage >= 0.60) return "󰁿"
+        if (percentage >= 0.50) return "󰁾"
+        if (percentage >= 0.40) return "󰁽"
+        if (percentage >= 0.30) return "󰁼"
+        if (percentage >= 0.20) return "󰁻"
+        if (percentage >= 0.10) return "󰁺"
+        return "󰂎"
+    }
+    property color fontColor: "black"
+    text: icon + " " + (percentage * 100).toFixed() + "%"
+    color: fontColor
+    verticalAlignment: Text.AlignVCenter
+    horizontalAlignment: Text.AlignHCenter
     property bool notified15: false
     property bool notified5: false
     Connections {

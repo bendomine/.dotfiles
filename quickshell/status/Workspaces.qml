@@ -6,9 +6,11 @@ Rectangle {
     id: root
     radius: 100
     property real margin: 5
+    property color bgColor: "white"
+    property color fontColor: "black"
     implicitHeight: workspaces.implicitHeight + margin * 2
     implicitWidth: workspaces.implicitWidth + margin * 2
-    color: "#50000000"
+    color: bgColor
 
     RowLayout {
 	id: workspaces
@@ -33,7 +35,7 @@ Rectangle {
 		    anchors.centerIn: parent
 		    id: workspaceLabel
 		    text: modelData.id
-		    color: modelData.active ? "red" : "black"
+		    color: modelData.active ? "red" : root.fontColor
 		}
 	    }
 	}

@@ -10,14 +10,18 @@ PopupWindow {
     id: root 
     required property Item anchorPoint
     required property real iconSize
-    property real xOffset: -iconSize / 2 + 10
-    property real yOffset: -iconSize / 2
+    /* property real xOffset: -iconSize / 2 + 10 */
+    /* property real yOffset: -iconSize / 2 */
+    property real xOffset: 0
+    property real yOffset: 0
     property real dWidth: 200
     property real dHeight: 300
     property real animDuration: 500
     property real animProgress: windowActive ? 1.0 : -0.1
     property bool displayWindow: animProgress > -0.1
     property bool windowActive
+    property color bgColor: "white"
+    property color fontColor: "black"
 
     onDisplayWindowChanged: Bluetooth.defaultAdapter.discovering = displayWindow
 
@@ -67,11 +71,11 @@ PopupWindow {
 	clip: true
 	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
 	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
-	color: windowActive ? "white" : "#50000000"
+	color: bgColor
 	/* color: "#FFFFFFFE" */
 	radius: iconSize / 2
-	border.color: windowActive ? "#AAAAA0" : "transparent"
-	border.width: 1
+	/* border.color: windowActive ? "#AAAAA0" : "transparent" */
+	/* border.width: 1 */
 
 	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
 	/* Behavior on border.color {ColorAnimation {duration: animDuration * 10.67}} */
@@ -88,9 +92,10 @@ PopupWindow {
 			anchors.centerIn: parent
 			text: "󰂯"
 			font.pointSize: 12
+			color: root.fontColor
 		    }
 		}
-		Text { text: "Bluetooth Settings" }
+		Text { text: "Bluetooth Settings"; color: root.fontColor }
 	    }
 
 	    Rectangle {
@@ -121,6 +126,7 @@ PopupWindow {
 			text: "Connected"
 			Layout.topMargin: 5
 			visible: connectedDevices.count > 0
+			color: root.fontColor
 		    }
 		    Repeater {
 			id: connectedDevices
@@ -129,11 +135,13 @@ PopupWindow {
 			delegate: Device {
 			    device: modelData
 			    active: index == devicesContainer.focusIdx
+			    fontColor: root.fontColor
 			}
 		    }
 		    Text {
 			text: "Known Devices"
 			Layout.topMargin: 5
+			color: root.fontColor
 		    }
 		    Repeater {
 			id: knownDevices
@@ -142,9 +150,10 @@ PopupWindow {
 			delegate: Device {
 			    device: modelData
 			    active: connectedDevices.count + index == devicesContainer.focusIdx
+			    fontColor: root.fontColor
 			}
 		    }
-		    Text { text: "Other Devices" }
+		    Text { text: "Other Devices"; color: root.fontColor }
 		    Repeater {
 			id: otherDevices
 			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>
@@ -152,6 +161,7 @@ PopupWindow {
 			delegate: Device {
 			    device: modelData
 			    active: connectedDevices.count + knownDevices.count + index == devicesContainer.focusIdx
+			    fontColor: root.fontColor
 			}
 		    }
 		}
@@ -164,7 +174,7 @@ PopupWindow {
 	onPressed: windowActive = !windowActive;
     }
     Shortcut {
-	sequence: "j"
+	sequences: [ "j", "n", "Down"]
 	onActivated: {
 	    devicesContainer.focusIdx ++;
 	    if (devicesContainer.focusIdx >= connectedDevices.count + knownDevices.count + otherDevices.count)
@@ -172,7 +182,7 @@ PopupWindow {
 	}
     }
     Shortcut {
-	sequence: "k"
+	sequences: [ "k", "p", "Up" ]
 	onActivated: {
 	    devicesContainer.focusIdx --;
 	    if (devicesContainer.focusIdx < 0)
@@ -189,6 +199,10 @@ PopupWindow {
 		knownDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count).action();
 	    else otherDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count - knownDevices.count).action();
 	}
+    }
+    Shortcut {
+	sequence: "Escape"
+	onActivated: windowActive = false;
     }
     onWindowActiveChanged: {
 	grab.active = windowActive;

@@ -15,6 +15,8 @@ PanelWindow {
     }
     implicitHeight: 40
     color: "#5AFFFFFF"
+    property color elementBackgroundColor: "white"
+    property color elementFontColor: "black"
 
     Item {
 	width: parent.width
@@ -32,9 +34,13 @@ PanelWindow {
 		font.pointSize: 15
 		color: "white"
 	    }
-	    Workspaces {id: workspaces}
-	    Item {id: bluetoothAnchor}
-	    Bluetooth {anchorPoint: bluetoothAnchor; iconSize: workspaces.height}
+	    Workspaces {id: workspaces; bgColor: root.elementBackgroundColor; fontColor: root.elementFontColor}
+	    Item {
+		id: bluetoothAnchor
+		implicitWidth: 22.5
+		implicitHeight: 22.5
+	    }
+	    Bluetooth {anchorPoint: bluetoothAnchor; iconSize: workspaces.height; bgColor: root.elementBackgroundColor; fontColor: root.elementFontColor}
 	}
 
 	RowLayout {
@@ -42,7 +48,10 @@ PanelWindow {
 	    anchors.verticalCenter: parent.verticalCenter
 	    spacing: 10
 
-	    Media {}
+	    StatusBox {
+		bgColor: root.elementBackgroundColor
+		Media { fontColor: root.elementFontColor }
+	    }
 	}
 
 	RowLayout {
@@ -51,19 +60,33 @@ PanelWindow {
 	    spacing: 10
 	    anchors.rightMargin: 10
 
-	    Volume {}
-	    Battery {}
+	    StatusBox { bgColor: root.elementBackgroundColor; Volume { fontColor: root.elementFontColor } }
+	    StatusBox { bgColor: root.elementBackgroundColor; Battery { fontColor: root.elementFontColor } }
 	    SystemClock {
 		precision: SystemClock.Seconds
 		id: clock
 	    }
-	    Text {
-		text: Qt.formatDate(clock.date, "ddd d MMM")
+	    StatusBox {
+		bgColor: root.elementBackgroundColor
+		Text {
+		    text: Qt.formatDate(clock.date, "ddd d MMM")
+		    color: root.elementFontColor
+		    verticalAlignment: Text.AlignVCenter
+		}
+		Text {
+		    text: Qt.formatTime(clock.date, "h:mm AP")
+		    color: root.elementFontColor
+		    verticalAlignment: Text.AlignVCenter
+		}
 	    }
-	    Text {
-		text: Qt.formatTime(clock.date, "h:mm AP")
+	    /* Item { id: trayAnchor } */
+	    Rectangle {
+		id: trayAnchor
+		color: "red"
+		implicitWidth: 22.5
+		implicitHeight: 22.5
 	    }
-	    Tray {barWindow: root}
+	    /* Tray { anchorPoint: trayAnchor; iconSize: workspaces.height; } */
 	}
 
     }

@@ -8,6 +8,7 @@ Rectangle {
     property string name: device ? device.name : ""
     property real margin: 5
     property bool active: false
+    property color fontColor: "black"
 
     implicitWidth: content.implicitWidth + margin * 2
     implicitHeight: content.implicitHeight + margin * 2
@@ -62,10 +63,12 @@ Rectangle {
 		    if (name.includes("video-display")) return "󰍹"
 		    return "󰂯"
 		}
+		color: fontColor
 	    }
 	}
 	Text {
 	    text: device.name
+	    color: fontColor
 	}
     }
 }
