@@ -13,6 +13,7 @@ Rectangle {
     /* required property int activeIndex */
     property bool active: false
     signal updateIndex()
+    signal resetIndex()
 
     implicitWidth: content.implicitWidth + margin * 2
     implicitHeight: content.implicitHeight + margin * 2
@@ -37,6 +38,7 @@ Rectangle {
 	cursorShape: Qt.PointingHandCursor
 	onHoveredChanged: {
 	    if (hovered) root.updateIndex()
+	    else root.resetIndex()
 	}
     }
     TapHandler {

@@ -137,6 +137,7 @@ PopupWindow {
 			    device: modelData
 			    active: index == devicesContainer.focusIdx
 			    onUpdateIndex: devicesContainer.focusIdx = index
+			    onResetIndex: devicesContainer.focusIdx = -1
 			    fontColor: root.fontColor
 			}
 		    }
@@ -155,6 +156,7 @@ PopupWindow {
 			    property int trueIndex: connectedDevices.count + index
 			    active: trueIndex == devicesContainer.focusIdx
 			    onUpdateIndex: devicesContainer.focusIdx = trueIndex
+			    onResetIndex: devicesContainer.focusIdx = -1
 			    fontColor: root.fontColor
 			}
 		    }
@@ -173,6 +175,7 @@ PopupWindow {
 			    active: trueIndex == devicesContainer.focusIdx
 			    fontColor: root.fontColor
 			    onUpdateIndex: devicesContainer.focusIdx = trueIndex
+			    onResetIndex: devicesContainer.focusIdx = -1
 			}
 		    }
 		}
