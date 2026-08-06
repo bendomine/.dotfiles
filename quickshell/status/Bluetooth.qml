@@ -121,6 +121,7 @@ PopupWindow {
 		    width: scrollView.availableWidth
 
 		    property int focusIdx: -1
+		    property bool keyboardInput: false
 		    
 		    Text {
 			text: "Connected"
@@ -135,6 +136,7 @@ PopupWindow {
 			delegate: Device {
 			    device: modelData
 			    active: index == devicesContainer.focusIdx
+			    onUpdateIndex: devicesContainer.focusIdx = index
 			    fontColor: root.fontColor
 			}
 		    }
@@ -150,7 +152,9 @@ PopupWindow {
 			    {return device.trusted && !device.connected})
 			delegate: Device {
 			    device: modelData
-			    active: connectedDevices.count + index == devicesContainer.focusIdx
+			    property int trueIndex: connectedDevices.count + index
+			    active: trueIndex == devicesContainer.focusIdx
+			    onUpdateIndex: devicesContainer.focusIdx = trueIndex
 			    fontColor: root.fontColor
 			}
 		    }
@@ -165,8 +169,10 @@ PopupWindow {
 			    {return !device.trusted && !isNameless(device) && !device.connected})
 			delegate: Device {
 			    device: modelData
-			    active: connectedDevices.count + knownDevices.count + index == devicesContainer.focusIdx
+			    property int trueIndex: connectedDevices.count + knownDevices.count + index
+			    active: trueIndex == devicesContainer.focusIdx
 			    fontColor: root.fontColor
+			    onUpdateIndex: devicesContainer.focusIdx = trueIndex
 			}
 		    }
 		}

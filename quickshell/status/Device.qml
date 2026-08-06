@@ -7,14 +7,18 @@ Rectangle {
     property BluetoothDevice device
     property string name: device ? device.name : ""
     property real margin: 5
-    property bool active: false
     property color fontColor: "black"
+
+    /* required property int selfIndex */
+    /* required property int activeIndex */
+    property bool active: false
+    signal updateIndex()
 
     implicitWidth: content.implicitWidth + margin * 2
     implicitHeight: content.implicitHeight + margin * 2
     Layout.fillWidth: true
 
-    color: hover.hovered || active ? "#8F666666" : "transparent"
+    color: active ? "#45000000" : "transparent"
     Behavior on color { ColorAnimation { duration: 150 } }
     radius: 5
 
@@ -30,8 +34,10 @@ Rectangle {
     }
 
     HoverHandler {
-	id: hover
 	cursorShape: Qt.PointingHandCursor
+	onHoveredChanged: {
+	    if (hovered) root.updateIndex()
+	}
     }
     TapHandler {
 	onTapped: action()
@@ -69,6 +75,14 @@ Rectangle {
 	Text {
 	    text: device.name
 	    color: fontColor
+	}
+	Text {
+	    text: "󰇘"
+	    visible: device.trusted
+	    color: active ? "black" : "grey"
+	    Behavior on color { ColorAnimation { duration: 150 } }
+	    Layout.alignment: Qt.AlignRight
+	    Layout.leftMargin: 5
 	}
     }
 }

@@ -82,11 +82,11 @@ PanelWindow {
 	    /* Item { id: trayAnchor } */
 	    Rectangle {
 		id: trayAnchor
-		color: "red"
 		implicitWidth: 22.5
 		implicitHeight: 22.5
+		color: "transparent"
 	    }
-	    /* Tray { anchorPoint: trayAnchor; iconSize: workspaces.height; } */
+	    Tray { anchorPoint: trayAnchor; iconSize: workspaces.height; }
 	}
 
     }

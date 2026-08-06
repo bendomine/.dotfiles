@@ -263,6 +263,7 @@ hl.config({
         touchpad = {
             natural_scroll = true,
 	    tap_and_drag = false,
+	    drag_3fg = 2,
 	    scroll_factor = 0.4,
 	    clickfinger_behavior = true,
 	    disable_while_typing = false,
@@ -371,6 +372,7 @@ hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("GRIMBLAST_EDITOR=\"satty --f
 
 -- Custom
 hl.bind(mainMod .. " + b", hl.dsp.global("quickshell:toggle-bluetooth"))
+hl.bind(mainMod .. " + t", hl.dsp.global("quickshell:toggle-tray"))
 
 
 --------------------------------

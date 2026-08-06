@@ -39,6 +39,18 @@ in {
 
   services.logind.powerKey = "ignore";
 
+  services.printing = {
+    enable = true;
+    drivers = with pkgs; [
+      cups-filters
+    ];
+  };
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
   # Experimental cli
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
