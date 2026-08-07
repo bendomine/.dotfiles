@@ -131,7 +131,7 @@ PopupWindow {
 		    }
 		    Repeater {
 			id: connectedDevices
-			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>
+			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices.values : []).filter((device) =>
 			    {return device.connected})
 			delegate: Device {
 			    device: modelData
@@ -149,7 +149,7 @@ PopupWindow {
 		    }
 		    Repeater {
 			id: knownDevices
-			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>
+			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices.values : []).filter((device) =>
 			    {return device.trusted && !device.connected})
 			delegate: Device {
 			    device: modelData
@@ -167,7 +167,7 @@ PopupWindow {
 		    }
 		    Repeater {
 			id: otherDevices
-			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices : []).values.filter((device) =>
+			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices.values : []).filter((device) =>
 			    {return !device.trusted && !isNameless(device) && !device.connected})
 			delegate: Device {
 			    device: modelData

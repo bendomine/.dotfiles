@@ -27,8 +27,6 @@ PopupWindow {
 	"steam"
     ]
 
-    onDisplayWindowChanged: Bluetooth.defaultAdapter.discovering = displayWindow
-
     Connections {
 	target: anchorPoint
 	function onXChanged() {
@@ -81,32 +79,35 @@ PopupWindow {
 	    spacing: 1
 	    Layout.fillWidth: true
 	    Layout.preferredHeight: title.implicitHeight
-	    RowLayout {
-		layoutDirection: Qt.RightToLeft
-		id: title
-		anchors.right: parent.right
+	    Item {
 		Layout.fillWidth: true
-		/* implicitWidth: 200 */
-		Rectangle {
-		    color: "transparent"
-		    Layout.preferredWidth: iconSize
-		    Layout.preferredHeight: iconSize
-		    Text {
-			anchors.centerIn: parent
-			text: "󱊖"
-			font.pointSize: 12
-			color: root.fontColor
+		Layout.preferredHeight: title.height
+		RowLayout {
+		    layoutDirection: Qt.RightToLeft
+		    id: title
+		    anchors.right: parent.right
+		    anchors.left: parent.left
+		    Rectangle {
+			color: "transparent"
+			Layout.preferredWidth: iconSize
+			Layout.preferredHeight: iconSize
+			Text {
+			    anchors.centerIn: parent
+			    text: "󱊖"
+			    font.pointSize: 12
+			    color: root.fontColor
+			}
+			/* Layout.alignment: Qt.AlignRight */
 		    }
-		    /* Layout.alignment: Qt.AlignRight */
-		}
-		Item {
-		    Layout.fillWidth: true
-		}
-		Text {
-		    text: "System Tray"
-		    color: root.fontColor
-		    Layout.alignment: Qt.AlignLeft
-		    Layout.leftMargin: 5
+		    Item {
+			Layout.fillWidth: true
+		    }
+		    Text {
+			text: "System Tray"
+			color: root.fontColor
+			Layout.alignment: Qt.AlignLeft
+			Layout.leftMargin: 5
+		    }
 		}
 	    }
 
