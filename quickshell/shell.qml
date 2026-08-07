@@ -9,7 +9,6 @@ import QtQuick.Controls
 import QtQuick.Window
 import "."
 import "./shared"
-import "./bluetooth"
 import "./status"
 
 ShellRoot {
