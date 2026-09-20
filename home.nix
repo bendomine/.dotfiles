@@ -98,9 +98,14 @@ in
       ps: with ps; [
 	dvisvgm dvipng
 	wrapfig amsmath ulem hyperref capt-of
-	physics
+	physics ec
       ]
     ))
+    rofi
+    qalculate-qt
+    audacious
+    cmake
+    libtool
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -182,6 +187,7 @@ setopt aliases
     "kitty".source = link "${dotfilesDir}/kitty";
     "hypr".source = link "${dotfilesDir}/hypr";
     "quickshell".source = link "${dotfilesDir}/quickshell";
+    "rofi".source = link "${dotfilesDir}/rofi";
     "btop".source = link "${dotfilesDir}/btop";
     "gtk-3.0".source = link "${dotfilesDir}/gtk-3.0";
     "starship.toml".source = link "${dotfilesDir}/starship.toml";

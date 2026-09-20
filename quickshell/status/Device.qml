@@ -1,6 +1,8 @@
 import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
+import ".."
 
 Rectangle {
     id: root
@@ -9,17 +11,17 @@ Rectangle {
     property real margin: 5
     property color fontColor: "black"
 
-    /* required property int selfIndex */
-    /* required property int activeIndex */
     property bool active: false
+    property bool hovered: hover.hovered && !optionsHover.hovered
     signal updateIndex()
     signal resetIndex()
+    signal popupMenu()
 
     implicitWidth: content.implicitWidth + margin * 2
     implicitHeight: content.implicitHeight + margin * 2
     Layout.fillWidth: true
 
-    color: active ? "#45000000" : "transparent"
+    color: active ? "#40000000" : "transparent"
     Behavior on color { ColorAnimation { duration: 150 } }
     radius: 5
 
@@ -33,17 +35,19 @@ Rectangle {
 	    device.connect();
 	}
     }
+    onHoveredChanged: {
+	if (hovered && !optionsHover.hovered) root.updateIndex()
+	else root.resetIndex()
+    }
 
     HoverHandler {
+	id: hover
 	cursorShape: Qt.PointingHandCursor
-	onHoveredChanged: {
-	    if (hovered) root.updateIndex()
-	    else root.resetIndex()
-	}
     }
     TapHandler {
 	onTapped: action()
     }
+    
     RowLayout {
 	id: content
 
@@ -78,13 +82,32 @@ Rectangle {
 	    text: device.name
 	    color: fontColor
 	}
-	Text {
-	    text: "󰇘"
-	    visible: device.trusted
-	    color: active ? "black" : "grey"
+	Rectangle {
+	    id: options
+	    implicitWidth: 15
+	    implicitHeight: 15
+	    radius: 15
+	    color: optionsHover.hovered ? "#40000000" : "transparent"
 	    Behavior on color { ColorAnimation { duration: 150 } }
-	    Layout.alignment: Qt.AlignRight
-	    Layout.leftMargin: 5
+
+	    HoverHandler {
+		id: optionsHover
+		cursorShape: Qt.PointingHandCursor
+	    }
+
+	    TapHandler {
+		onTapped: popupMenu()
+	    }
+
+	    Text {
+		anchors.centerIn: parent
+		text: " 󰇘 "
+		visible: device.trusted
+		color: active ? "black" : "grey"
+		Behavior on color { ColorAnimation { duration: 150 } }
+		Layout.alignment: Qt.AlignRight
+		Layout.leftMargin: 5
+	    }
 	}
     }
 }

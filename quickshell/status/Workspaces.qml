@@ -35,7 +35,7 @@ Rectangle {
 		    anchors.centerIn: parent
 		    id: workspaceLabel
 		    text: modelData.id
-		    color: modelData.active ? "red" : root.fontColor
+		    color: modelData.active ? "blue" : root.fontColor
 		}
 	    }
 	}

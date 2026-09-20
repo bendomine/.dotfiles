@@ -140,8 +140,8 @@ PopupWindow {
 			model: SystemTray.items
 			delegate: Rectangle {
 			    id: child
-			    implicitWidth: trayItem.implicitWidth
-			    implicitHeight: trayItem.implicitHeight
+			    implicitWidth: 20
+			    implicitHeight: 20
 			    color: "red"
 			    MouseArea {
 				anchors.fill: parent
@@ -160,10 +160,16 @@ PopupWindow {
 				}
 			    }
 			    IconImage {
-				id: trayItem
-				source: modelData.icon.toString().replace("-symbolic", "")
+				source: modelData.icon
 				implicitSize: 20
 				anchors.centerIn: parent
+			    }
+			    IconImage {
+				id: trayItem
+				source: modelData.id
+				implicitSize: 20
+				anchors.centerIn: parent
+				visible: status === Image.Ready
 			    }
 			}
 		    }

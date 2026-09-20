@@ -5,6 +5,7 @@ import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import ".."
 
 PopupWindow {
     id: root 
@@ -182,6 +183,8 @@ PopupWindow {
 	    }
 	}
     }
+
+    
     GlobalShortcut {
 	description: "Toggles the bluetooth menu"
 	name: "toggle-bluetooth"
@@ -226,5 +229,17 @@ PopupWindow {
 	id: grab
 	windows: [ root ]
 	active: false
+    }
+
+    MyPopupMenu {
+	id: deviceMenu
+	item: options
+	show: false
+	names: [ "hi", "hi"]
+	functions: [
+	    () => {console.log("thing 1")},
+	    () => {console.log("thing 2")}
+	]
+	width: 50
     }
 }

@@ -30,7 +30,8 @@ hl.monitor({
 -- Set programs that you use
 local terminal    = "kitty"
 local fileManager = "dolphin"
-local menu        = "hyprlauncher"
+local menu        = "rofi -show combi -modes \"combi,drun,window\" -combi-modes \"drun,run\""
+
 
 
 -------------------
@@ -47,6 +48,7 @@ hl.on("hyprland.start", function ()
 			    hl.exec_cmd("blueman-applet")
 			    hl.exec_cmd("qs")
 			    hl.exec_cmd("hyprctl plugin load \"$HYPR_PLUGIN_DIR/lib/libhyprbars.so\"")
+                            hl.exec_cmd("hyprctl hyprpaper wallpaper eDP-1,/tmp/wallpaper_shader.png")
 end)
 
 
@@ -129,6 +131,9 @@ hl.config({
             passes    = 1,
             vibrancy  = 0.1696,
         },
+	-- glow = {
+	--     enabled = true,
+	-- },
     },
 
     animations = {
@@ -373,6 +378,7 @@ hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("GRIMBLAST_EDITOR=\"satty --f
 -- Custom
 hl.bind(mainMod .. " + b", hl.dsp.global("quickshell:toggle-bluetooth"))
 hl.bind(mainMod .. " + t", hl.dsp.global("quickshell:toggle-tray"))
+hl.bind(mainMod .. " + w", hl.dsp.exec_cmd("rofi -show window"))
 
 
 --------------------------------
