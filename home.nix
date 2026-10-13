@@ -3,7 +3,7 @@
 let
   # antigravityFlake = builtins.getFlake "github:jacopone/antigravity-nix";
   # antigravityPkg = antigravityFlake.packages.${pkgs.system};
-  antigravityPkg = inputs.antigravity.packages.${pkgs.stdenv.hostPlatform.system};
+  # antigravityPkg = inputs.antigravity.packages.${pkgs.stdenv.hostPlatform.system};
 
   # hyprlandPluginsFlake = builtins.getFlake "github:hyprwm/hyprland-plugins";
   # hyprlandPkg = hyprlandPluginsFlake.inputs.hyprland.packages.${pkgs.system}.hyprland;
@@ -30,6 +30,8 @@ in
   home.stateVersion = "25.11"; # Please read the comment before changing.
 
   fonts.fontconfig.enable = true;
+
+  imports = [ inputs.omp.homeManagerModules.default ];
   
   # The home.packages option allows you to install Nix packages into your
   # environment.
@@ -51,6 +53,7 @@ in
       moderngl
       numpy
       pillow
+      matplotlib
     ]))
     discord
     protontricks
@@ -80,9 +83,6 @@ in
     kdePackages.qtsvg
     # papirus-icon-theme
     qt6.qtsvg
-    antigravityPkg.default
-    antigravityPkg.google-antigravity-ide
-    antigravityPkg.google-antigravity-cli
     glslviewer
     vips
     gimp
@@ -98,14 +98,20 @@ in
       ps: with ps; [
 	dvisvgm dvipng
 	wrapfig amsmath ulem hyperref capt-of
-	physics ec
+	physics ec cm-super
       ]
     ))
     rofi
+    rofi-calc
     qalculate-qt
     audacious
     cmake
     libtool
+    kdePackages.okular
+    pandoc
+    clang-tools
+    zellij
+    brave
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
@@ -139,12 +145,12 @@ in
     dotDir = "${config.xdg.configHome}/zsh";
 
     initContent = ''
-echo
-fastfetch
-if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
+      echo
+      fastfetch
+      if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
   export KITTY_SHELL_INTEGRATION="enabled"
   source "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty-integration"
-fi
+  fi
 
 export EDITOR="emacsclient -c"
 setopt aliases
@@ -156,6 +162,11 @@ setopt aliases
   };
   programs.quickshell.enable = true;
   programs.starship.enable = true;
+
+  programs.omp = {
+    enable = true;
+    settings.startup.quiet = true;
+  };
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
   # plain files is through 'home.file'.
@@ -242,6 +253,7 @@ setopt aliases
       defaultApplications = {
 	"text/plain" = [ "emacsclient-custom.desktop" ];
 	"text/markdown" = [ "emacsclient-custom.desktop" ];
+	"application/pdf" = [ "org.kde.okular.desktop" ];
       };
     };
   };
@@ -267,6 +279,7 @@ setopt aliases
     XDG_DATA_DIRS = "$XDG_DATA_DIRS:$HOME/.nix-profile/share:/run/current-system/sw/share";
     XCURSOR_SIZE = "24";
     HYPRCURSOR_SIZE = "24";
+    ROFI_PLUGIN_PATH = "/etc/profiles/per-user/ben/lib/rofi";
   };
 
   # Let Home Manager install and manage itself.

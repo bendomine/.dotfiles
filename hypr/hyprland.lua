@@ -43,7 +43,8 @@ local menu        = "rofi -show combi -modes \"combi,drun,window\" -combi-modes 
 -- Autostart necessary processes (like notifications daemons, status bars, etc.)
 -- Or execute your favorite apps at launch like this:
 --
-hl.on("hyprland.start", function () 
+hl.on("hyprland.start", function ()
+			    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE")
 			    hl.exec_cmd("hyprpaper")
 			    hl.exec_cmd("blueman-applet")
 			    hl.exec_cmd("qs")
@@ -62,6 +63,8 @@ end)
 -- hl.env("XCURSOR_THEME", "capitaine-cursors")
 hl.env("HYPRCURSOR_SIZE", "36")
 hl.env("HYPRCURSOR_THEME", "capitaine-cursors")
+hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
+hl.env("XDG_SESSION_TYPE", "wayland")
 -- hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme 'capitaine-cursors'")
 -----------------------
 ----- PERMISSIONS -----
@@ -376,9 +379,10 @@ hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("grimblast copy area"))
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("GRIMBLAST_EDITOR=\"satty --filename\" grimblast edit area"))
 
 -- Custom
-hl.bind(mainMod .. " + b", hl.dsp.global("quickshell:toggle-bluetooth"))
-hl.bind(mainMod .. " + t", hl.dsp.global("quickshell:toggle-tray"))
-hl.bind(mainMod .. " + w", hl.dsp.exec_cmd("rofi -show window"))
+hl.bind(mainMod .. " + B", hl.dsp.global("quickshell:toggle-bluetooth"))
+hl.bind(mainMod .. " + T", hl.dsp.global("quickshell:toggle-tray"))
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("rofi -show window"))
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("rofi -show calc"))
 
 
 --------------------------------

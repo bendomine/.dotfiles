@@ -122,6 +122,11 @@ in {
   };
   security.polkit.enable = true;
 
+  virtualisation.podman = {
+    enable = true;
+    dockerCompat = true;
+  };
+
   # Configure keymap in X11
   # services.xserver.xkb.layout = "us";
   # services.xserver.xkb.options = "eurosign:e,caps:escape";
@@ -189,6 +194,7 @@ in {
     hyprlauncher
     capitaine-cursors
     papirus-icon-theme
+    distrobox
     # qt6.qtsvg
   ];
   nixpkgs.config.allowUnfree = true;

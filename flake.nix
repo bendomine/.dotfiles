@@ -15,7 +15,7 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    antigravity.url = "github:jacopone/antigravity-nix";
+    omp.url = "github:can1357/oh-my-pi";
   };
 
   outputs = { self, nixpkgs, home-manager, ...}@inputs: {
