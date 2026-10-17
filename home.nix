@@ -72,7 +72,6 @@ in
     playerctl
     grimblast
     satty
-    gemini-cli
     claude-code
     heroic
     # antigravity
@@ -111,7 +110,11 @@ in
     pandoc
     clang-tools
     zellij
-    brave
+    (brave.override {
+      commandLineArgs = [
+	"--force-device-scale-factor=0.8"
+      ];
+    })
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of

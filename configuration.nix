@@ -37,7 +37,7 @@ in {
   services.automatic-timezoned.enable = true;
   services.timesyncd.enable = true;
 
-  services.logind.powerKey = "ignore";
+  services.logind.settings.Login.HandlePowerKey = "ignore";
 
   services.printing = {
     enable = true;
