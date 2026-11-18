@@ -1,0 +1,15 @@
+/* Fallback palette for theme.rasi (dark). Overridden by the generated
+ * ~/.cache/wallpaper/colors.rasi written by wallpaper/wallpaper.py. */
+* {
+	wp-background:       #11131a;
+	wp-surface:          #1a1d27;
+	wp-surface-variant:  #272b38;
+	wp-foreground:       #e3e5ee;
+	wp-foreground-muted: #9aa0b4;
+	wp-accent:           #8aadf4;
+	wp-on-accent:        #0e1220;
+	wp-accent-alt:       #c6a0f6;
+	wp-border:           #343a4c;
+	wp-urgent:           #ef8a80;
+	wp-success:          #a6da95;
+}

@@ -1,113 +1,81 @@
 import Quickshell.Bluetooth
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
+import "../shared"
 import ".."
 
-Rectangle {
-    id: root
-    property BluetoothDevice device
-    property string name: device ? device.name : ""
-    property real margin: 5
-    property color fontColor: "black"
+// Bluetooth device row. Activate (click / Space / Return) connects or disconnects;
+// the options button, right click, Shift+Return, `o` or `m` request the context menu.
+MenuRow {
+	id: root
+	property BluetoothDevice device
+	signal menuRequested()
 
-    property bool active: false
-    property bool hovered: hover.hovered && !optionsHover.hovered
-    signal updateIndex()
-    signal resetIndex()
-    signal popupMenu()
+	function action() {
+		if (!device) return;
 
-    implicitWidth: content.implicitWidth + margin * 2
-    implicitHeight: content.implicitHeight + margin * 2
-    Layout.fillWidth: true
-
-    color: active ? "#40000000" : "transparent"
-    Behavior on color { ColorAnimation { duration: 150 } }
-    radius: 5
-
-    function action() {
-	if (!device) return;
-
-	if (device.connected) device.disconnect();
-	
-	else {
-	    device.trusted = true;
-	    device.connect();
-	}
-    }
-    onHoveredChanged: {
-	if (hovered && !optionsHover.hovered) root.updateIndex()
-	else root.resetIndex()
-    }
-
-    HoverHandler {
-	id: hover
-	cursorShape: Qt.PointingHandCursor
-    }
-    TapHandler {
-	onTapped: action()
-    }
-    
-    RowLayout {
-	id: content
-
-	anchors.left: parent.left
-	anchors.top: parent.top
-	anchors.bottom: parent.bottom
-	anchors.margins: margin
-	Rectangle {
-	    implicitWidth: 17
-	    implicitHeight: 17
-	    radius: 20
-	    color: "transparent"
-	    Text {
-		id: deviceIcon
-		anchors.centerIn: parent
-		text: {
-		    let name = device ? device.icon : ""
-		    if (name.includes("headset") || name.includes("headphones")) return "󰋋"
-		    if (name.includes("audio-card") || name.includes("audio-speakers")) return "󰓃"
-		    if (name.includes("input-keyboard")) return "󰌌"
-		    if (name.includes("input-mouse")) return "󰍽"
-		    if (name.includes("input-gaming")) return "󰊴"
-		    if (name.includes("phone")) return "󰏲"
-		    if (name.includes("computer")) return "󰟀"
-		    if (name.includes("video-display")) return "󰍹"
-		    return "󰂯"
+		if (device.connected) device.disconnect();
+		
+		else {
+			device.trusted = true;
+			device.connect();
 		}
-		color: fontColor
-	    }
 	}
-	Text {
-	    text: device.name
-	    color: fontColor
+
+	onActivated: action()
+	onAltActivated: menuRequested()
+
+	selected: device ? device.connected : false
+	text: device ? device.name : ""
+	subtext: {
+		if (!device)
+			return "";
+		switch (device.state) {
+		case BluetoothDeviceState.Connecting:
+			return "Connecting…";
+		case BluetoothDeviceState.Disconnecting:
+			return "Disconnecting…";
+		case BluetoothDeviceState.Connected:
+			return device.batteryAvailable ? `Connected · ${Math.round(device.battery * 100)}%` : "Connected";
+		}
+		if (device.pairing)
+			return "Pairing…";
+		return device.paired ? "Paired" : "";
 	}
+	icon: {
+		let name = device ? device.icon : ""
+		if (name.includes("headset") || name.includes("headphones")) return "󰋋"
+		if (name.includes("audio-card") || name.includes("audio-speakers")) return "󰓃"
+		if (name.includes("input-keyboard")) return "󰌌"
+		if (name.includes("input-mouse")) return "󰍽"
+		if (name.includes("input-gaming")) return "󰊴"
+		if (name.includes("phone")) return "󰏲"
+		if (name.includes("computer")) return "󰟀"
+		if (name.includes("video-display")) return "󰍹"
+		return "󰂯"
+	}
+
+	// Options button
 	Rectangle {
-	    id: options
-	    implicitWidth: 15
-	    implicitHeight: 15
-	    radius: 15
-	    color: optionsHover.hovered ? "#40000000" : "transparent"
-	    Behavior on color { ColorAnimation { duration: 150 } }
+		id: options
+		implicitWidth: 26
+		implicitHeight: 26
+		radius: 13
+		color: optionsMouse.containsMouse ? Theme.alpha(Theme.foreground, 0.12) : "transparent"
+		Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-	    HoverHandler {
-		id: optionsHover
-		cursorShape: Qt.PointingHandCursor
-	    }
+		Glyph {
+			anchors.centerIn: parent
+			text: "󰇘"
+			color: root.highlighted ? Theme.foreground : Theme.foregroundMuted
+		}
 
-	    TapHandler {
-		onTapped: popupMenu()
-	    }
-
-	    Text {
-		anchors.centerIn: parent
-		text: " 󰇘 "
-		visible: device.trusted
-		color: active ? "black" : "grey"
-		Behavior on color { ColorAnimation { duration: 150 } }
-		Layout.alignment: Qt.AlignRight
-		Layout.leftMargin: 5
-	    }
+		MouseArea {
+			id: optionsMouse
+			anchors.fill: parent
+			hoverEnabled: true
+			cursorShape: Qt.PointingHandCursor
+			onClicked: root.menuRequested()
+		}
 	}
-    }
 }

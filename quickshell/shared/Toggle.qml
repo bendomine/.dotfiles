@@ -1,43 +1,56 @@
 // Toggle.qml
 import QtQuick
-import QtQuick.Controls
+import QtQuick.Layouts
+import ".."
 
-Switch {
-    id: control
+// Themed on/off switch. Controlled: it never changes `checked` itself, it emits
+// toggled(value) with the requested state, so `checked` can stay bound:
+//   Toggle { checked: adapter.enabled; onToggled: value => adapter.enabled = value }
+// Keyboard (BarPopup nav protocol): Space/Return toggles when focused.
+Item {
+	id: root
+	property bool checked: false
+	property bool navigable: true
+	property bool keyFocused: false
+	signal toggled(bool value)
 
-    // 1. Override the indicator (The track and the knob)
-    indicator: Rectangle {
-        implicitWidth: 24
-        implicitHeight: 14
-        x: control.leftPadding
-        y: parent.height / 2 - height / 2
-        radius: 14
-        
-        // Change color based on the Switch's built-in state
-        color: control.checked ? theme.highlight : "#CCCCCC"
-	Behavior on color { ColorAnimation { duration: 100 } }
-        /* border.color: control.checked ? "#4CAF50" : "#999999" */
+	function activate() {
+		toggled(!checked);
+	}
 
-        // The knob (The little circle that moves)
-        Rectangle {
-            x: control.checked ? parent.width - width - 2 : 2
-	    Behavior on x { PropertyAnimation { duration: 100 } }
-            width: 10
-            height: 10
-            radius: 10
-            color: "black"
-	    anchors.verticalCenter: parent.verticalCenter
-        }
-    }
+	implicitWidth: 38
+	implicitHeight: 22
+	Layout.alignment: Qt.AlignVCenter
+	opacity: enabled ? 1 : 0.4
 
-    // 2. Override the contentItem (The text next to the switch)
-    contentItem: Text {
-        text: control.text
-        font: control.font
-        opacity: enabled ? 1.0 : 0.3
-        /* color: control.down ? "#17a81a" : "#21be2b" */
-        verticalAlignment: Text.AlignVCenter
-        
-        leftPadding: control.indicator.width + control.spacing
-    }
+	Rectangle {
+		id: track
+		anchors.fill: parent
+		radius: height / 2
+		color: root.checked ? Theme.accent : Theme.surfaceVariant
+		border.width: 1
+		border.color: root.keyFocused ? Theme.accent : (root.checked ? Theme.accent : Theme.border)
+		Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+		Rectangle {
+			id: knob
+			width: track.height - 6
+			height: width
+			radius: width / 2
+			anchors.verticalCenter: parent.verticalCenter
+			x: root.checked ? track.width - width - 3 : 3
+			color: root.checked ? Theme.onAccent : Theme.foregroundMuted
+			scale: mouse.pressed ? 0.85 : 1
+			Behavior on x { NumberAnimation { duration: Theme.animNormal; easing.type: Easing.OutCubic } }
+			Behavior on color { ColorAnimation { duration: Theme.animFast } }
+			Behavior on scale { NumberAnimation { duration: Theme.animFast } }
+		}
+	}
+
+	MouseArea {
+		id: mouse
+		anchors.fill: parent
+		cursorShape: Qt.PointingHandCursor
+		onClicked: root.activate()
+	}
 }

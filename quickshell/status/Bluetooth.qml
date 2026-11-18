@@ -1,245 +1,167 @@
 import Quickshell
 import Quickshell.Bluetooth
-import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
+import "../shared"
 import ".."
 
-PopupWindow {
-    id: root 
-    required property Item anchorPoint
-    required property real iconSize
-    /* property real xOffset: -iconSize / 2 + 10 */
-    /* property real yOffset: -iconSize / 2 */
-    property real xOffset: 0
-    property real yOffset: 0
-    property real dWidth: 200
-    property real dHeight: 300
-    property real animDuration: 500
-    property real animProgress: windowActive ? 1.0 : -0.1
-    property bool displayWindow: animProgress > -0.1
-    property bool windowActive
-    property color bgColor: "white"
-    property color fontColor: "black"
+// Bluetooth pill + popup (quickshell:toggle-bluetooth).
+StatusBox {
+	id: root
+	readonly property var adapter: Bluetooth.defaultAdapter
+	readonly property bool powered: adapter ? adapter.enabled : false
+	readonly property var devices: adapter ? adapter.devices.values : []
+	readonly property var connectedDevices: devices.filter(device => device.connected)
+	readonly property var knownDevices: devices.filter(device => device.trusted && !device.connected)
+	readonly property var otherDevices: devices.filter(device => !device.trusted && !isNameless(device) && !device.connected)
 
-    onDisplayWindowChanged: Bluetooth.defaultAdapter.discovering = displayWindow
-
-    Connections {
-	target: anchorPoint
-	function onXChanged() {
-	    if (!root.displayWindow) {
-		root.visible = false
-		Qt.callLater(() => root.visible = true)
-	    }
+	function isNameless(device) {
+		if (!device || !device.name) return true;
+		const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/i;
+		return device.name.trim() === "" || macAddressRegex.test(device.name);
 	}
-    }
-    anchor.item: anchorPoint
-    anchor.rect.x: xOffset
-    anchor.rect.y: yOffset
-    visible: true
-    color: "transparent"
 
-    implicitWidth: displayWindow ? dWidth : iconSize + 2
-    implicitHeight: displayWindow ? dHeight : iconSize + 2
-
-    function mix(x, y, a, b) {
-	a /= b;
-	a = Math.min(Math.max(a, 0.0), 1.0);
-	return x * (1 - a) + y * a;
-    }
-
-    function isNameless(device) {
-	if (!device || !device.name) return true;
-	const macAddressRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/i;
-	return device.name.trim() === "" || macAddressRegex.test(device.name);
-    }
-
-    Behavior on animProgress { NumberAnimation {
-	duration: animDuration
-	easing.type: Easing.OutQuart
-    } }
-
-    Rectangle {
-	HoverHandler {
-	    id: displayHandler
-	    onHoveredChanged: {
-		if (hovered) windowActive = true;
-		else windowActive = false;
-	    }
+	function deviceActions(device) {
+		return [
+			{
+				text: device.connected ? "Disconnect" : "Connect",
+				icon: device.connected ? "󰌸" : "󰌷",
+				action: () => {
+					if (device.connected) {
+						device.disconnect();
+					} else {
+						device.trusted = true;
+						device.connect();
+					}
+				}
+			},
+			{
+				text: device.trusted ? "Untrust" : "Trust",
+				icon: device.trusted ? "󰦞" : "󰕥",
+				action: () => device.trusted = !device.trusted
+			},
+			{
+				text: "Forget",
+				icon: "󰧧",
+				danger: true,
+				action: () => device.forget()
+			}
+		];
 	}
-	clip: true
-	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
-	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
-	color: bgColor
-	/* color: "#FFFFFFFE" */
-	radius: iconSize / 2
-	/* border.color: windowActive ? "#AAAAA0" : "transparent" */
-	/* border.width: 1 */
 
-	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
-	/* Behavior on border.color {ColorAnimation {duration: animDuration * 10.67}} */
+	active: popup.open
+	spacing: Theme.spacingSmall
 
-	ColumnLayout {
-	    anchors.fill: parent
-	    spacing: 1
-	    RowLayout {
-		Rectangle {
-		    color: "transparent"
-		    Layout.preferredWidth: iconSize
-		    Layout.preferredHeight: iconSize
-		    Text {
-			anchors.centerIn: parent
-			text: "󰂯"
-			font.pointSize: 12
-			color: root.fontColor
-		    }
+	Glyph {
+		text: !root.powered ? "󰂲" : (root.connectedDevices.length > 0 ? "󰂱" : "󰂯")
+		color: root.active ? root.fg : (!root.powered ? root.fgMuted : (root.connectedDevices.length > 0 ? Theme.accent : root.fg))
+	}
+	StyledText {
+		visible: root.connectedDevices.length > 0
+		Layout.maximumWidth: 110
+		text: root.connectedDevices.length === 1 ? root.connectedDevices[0].name : root.connectedDevices.length
+		elide: Text.ElideRight
+		color: root.fg
+	}
+
+	BarPopup {
+		id: popup
+		anchorItem: root
+		shortcutName: "toggle-bluetooth"
+		contentWidth: 300
+
+		// Scan for devices while the panel is open.
+		onOpenChanged: {
+			if (root.adapter && root.adapter.enabled)
+				root.adapter.discovering = open;
 		}
-		Text { text: "Bluetooth Settings"; color: root.fontColor }
-	    }
 
-	    Rectangle {
-		Layout.alignment: Qt.AlignHCenter
-		Layout.maximumWidth: parent.width - 10
-		Layout.fillWidth: true
-		color: "lightgrey"
-		implicitHeight: 2
-	    }
-
-	    ScrollView {
-		id: scrollView
-		Layout.fillWidth: true
-		Layout.fillHeight: true
-		Layout.alignment: Qt.AlignHCenter
-		Layout.maximumWidth: parent.width - 10
-		clip: true
-		ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-
-		ColumnLayout {
-		    id: devicesContainer
-		    
-		    width: scrollView.availableWidth
-
-		    property int focusIdx: -1
-		    property bool keyboardInput: false
-		    
-		    Text {
-			text: "Connected"
-			Layout.topMargin: 5
-			visible: connectedDevices.count > 0
-			color: root.fontColor
-		    }
-		    Repeater {
-			id: connectedDevices
-			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices.values : []).filter((device) =>
-			    {return device.connected})
-			delegate: Device {
-			    device: modelData
-			    active: index == devicesContainer.focusIdx
-			    onUpdateIndex: devicesContainer.focusIdx = index
-			    onResetIndex: devicesContainer.focusIdx = -1
-			    fontColor: root.fontColor
-			}
-		    }
-		    Text {
-			text: "Known Devices"
-			Layout.topMargin: 5
-			visible: knownDevices.count > 0
-			color: root.fontColor
-		    }
-		    Repeater {
-			id: knownDevices
-			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices.values : []).filter((device) =>
-			    {return device.trusted && !device.connected})
-			delegate: Device {
-			    device: modelData
-			    property int trueIndex: connectedDevices.count + index
-			    active: trueIndex == devicesContainer.focusIdx
-			    onUpdateIndex: devicesContainer.focusIdx = trueIndex
-			    onResetIndex: devicesContainer.focusIdx = -1
-			    fontColor: root.fontColor
-			}
-		    }
-		    Text {
-			text: "Other Devices"
-			color: root.fontColor
-			visible: otherDevices.count > 0
-		    }
-		    Repeater {
-			id: otherDevices
-			model: (Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.devices.values : []).filter((device) =>
-			    {return !device.trusted && !isNameless(device) && !device.connected})
-			delegate: Device {
-			    device: modelData
-			    property int trueIndex: connectedDevices.count + knownDevices.count + index
-			    active: trueIndex == devicesContainer.focusIdx
-			    fontColor: root.fontColor
-			    onUpdateIndex: devicesContainer.focusIdx = trueIndex
-			    onResetIndex: devicesContainer.focusIdx = -1
-			}
-		    }
+		PopupHeader {
+			icon: "󰂯"
+			title: "Bluetooth"
+			subtitle: !root.adapter ? "No adapter" : (!root.powered ? "Off" : (root.adapter.discovering ? "Scanning for devices…" : root.adapter.name))
 		}
-	    }
-	}
-    }
 
-    
-    GlobalShortcut {
-	description: "Toggles the bluetooth menu"
-	name: "toggle-bluetooth"
-	onPressed: windowActive = !windowActive;
-    }
-    Shortcut {
-	sequences: [ "j", "n", "Down"]
-	onActivated: {
-	    devicesContainer.focusIdx ++;
-	    if (devicesContainer.focusIdx >= connectedDevices.count + knownDevices.count + otherDevices.count)
-		devicesContainer.focusIdx = 0;
-	}
-    }
-    Shortcut {
-	sequences: [ "k", "p", "Up" ]
-	onActivated: {
-	    devicesContainer.focusIdx --;
-	    if (devicesContainer.focusIdx < 0)
-		devicesContainer.focusIdx = connectedDevices.count + knownDevices.count + otherDevices.count - 1
-	}
-    }
-    Shortcut {
-	sequences: ["Space", "Return"]
-	onActivated: {
-	    if (devicesContainer.focusIdx < 0) return;
-	    if (devicesContainer.focusIdx < connectedDevices.count)
-		connectedDevices.itemAt(devicesContainer.focusIdx).action();
-	    else if (devicesContainer.focusIdx < knownDevices.count + connectedDevices.count)
-		knownDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count).action();
-	    else otherDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count - knownDevices.count).action();
-	}
-    }
-    Shortcut {
-	sequence: "Escape"
-	onActivated: windowActive = false;
-    }
-    onWindowActiveChanged: {
-	grab.active = windowActive;
-	devicesContainer.focusIdx = -1;
-    }
-    HyprlandFocusGrab {
-	id: grab
-	windows: [ root ]
-	active: false
-    }
+		MenuRow {
+			icon: root.powered ? "󰂯" : "󰂲"
+			text: "Power"
+			selected: root.powered
+			enabled: root.adapter !== null
+			onActivated: root.adapter.enabled = !root.adapter.enabled
+			Toggle {
+				checked: root.powered
+				onToggled: value => {
+					if (root.adapter)
+						root.adapter.enabled = value;
+				}
+			}
+		}
 
-    MyPopupMenu {
-	id: deviceMenu
-	item: options
-	show: false
-	names: [ "hi", "hi"]
-	functions: [
-	    () => {console.log("thing 1")},
-	    () => {console.log("thing 2")}
-	]
-	width: 50
-    }
+		Separator {
+			visible: root.powered
+		}
+
+		ScrollList {
+			visible: root.powered
+			maxHeight: 340
+
+			SectionLabel {
+				text: "Connected"
+				visible: connectedRepeater.count > 0
+			}
+			Repeater {
+				id: connectedRepeater
+				model: ScriptModel { values: root.connectedDevices }
+				delegate: Device {
+					id: connectedDevice
+					required property var modelData
+					device: modelData
+					onMenuRequested: deviceMenu.show(connectedDevice, root.deviceActions(device))
+				}
+			}
+
+			SectionLabel {
+				text: "Known Devices"
+				visible: knownRepeater.count > 0
+			}
+			Repeater {
+				id: knownRepeater
+				model: ScriptModel { values: root.knownDevices }
+				delegate: Device {
+					id: knownDevice
+					required property var modelData
+					device: modelData
+					onMenuRequested: deviceMenu.show(knownDevice, root.deviceActions(device))
+				}
+			}
+
+			SectionLabel {
+				text: "Other Devices"
+				visible: otherRepeater.count > 0
+			}
+			Repeater {
+				id: otherRepeater
+				model: ScriptModel { values: root.otherDevices }
+				delegate: Device {
+					id: otherDevice
+					required property var modelData
+					device: modelData
+					onMenuRequested: deviceMenu.show(otherDevice, root.deviceActions(device))
+				}
+			}
+
+			StyledText {
+				Layout.fillWidth: true
+				Layout.margins: Theme.spacing
+				visible: connectedRepeater.count + knownRepeater.count + otherRepeater.count === 0
+				text: root.adapter && root.adapter.discovering ? "Searching for devices…" : "No devices"
+				color: Theme.foregroundMuted
+				horizontalAlignment: Text.AlignHCenter
+			}
+		}
+
+		overlay: ContextMenu {
+			id: deviceMenu
+		}
+	}
 }

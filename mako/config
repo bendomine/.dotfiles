@@ -1,7 +1,10 @@
 default-timeout=5000
 ignore-timeout=1
-font=sans-serif 8
-border-radius=5
-border-size=1
-padding=5
-background-color=#3b3b3bd1
+font=JetBrainsMono Nerd Font Propo 10
+border-radius=10
+border-size=2
+padding=10
+margin=10
+width=360
+# Colors follow the wallpaper palette (written by wallpaper/wallpaper.py).
+include=~/.cache/wallpaper/mako-colors

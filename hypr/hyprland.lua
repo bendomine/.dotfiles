@@ -44,12 +44,11 @@ local menu        = "rofi -show combi -modes \"combi,drun,window\" -combi-modes 
 -- Or execute your favorite apps at launch like this:
 --
 hl.on("hyprland.start", function ()
-			    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE")
+			    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE && systemctl --user start wallpaper.service")
 			    hl.exec_cmd("hyprpaper")
 			    hl.exec_cmd("blueman-applet")
 			    hl.exec_cmd("qs")
 			    hl.exec_cmd("hyprctl plugin load \"$HYPR_PLUGIN_DIR/lib/libhyprbars.so\"")
-                            hl.exec_cmd("hyprctl hyprpaper wallpaper eDP-1,/tmp/wallpaper_shader.png")
 end)
 
 
@@ -90,6 +89,12 @@ hl.env("XDG_SESSION_TYPE", "wayland")
 -----------------------
 
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
+-- Colors generated from the wallpaper palette by ~/.dotfiles/wallpaper/wallpaper.py
+local ok, wp = pcall(dofile, os.getenv("HOME") .. "/.cache/wallpaper/hyprland-colors.lua")
+if not ok or type(wp) ~= "table" then
+    wp = {}
+end
+
 hl.config({
     general = {
         gaps_in  = 5,
@@ -99,8 +104,8 @@ hl.config({
 
         col = {
             -- active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
-	    active_border = "rgba(33ccffee)",
-            inactive_border = "rgba(595959aa)",
+	    active_border = wp.active_border or "rgba(33ccffee)",
+            inactive_border = wp.inactive_border or "rgba(595959aa)",
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
@@ -125,7 +130,7 @@ hl.config({
             enabled      = true,
             range        = 4,
             render_power = 3,
-            color        = 0xee1a1a1a,
+            color        = wp.shadow or 0xee1a1a1a,
         },
 
         blur = {
@@ -206,7 +211,9 @@ hl.window_rule({
 })
 hl.layer_rule({
     match = { namespace = "quickshell" },
-    blur = true
+    blur = true,
+    -- Only blur behind painted pixels, not the transparent corners around the floating bar.
+    ignore_alpha = 0.2,
 })
 
 -- See https://wiki.hypr.land/Configuring/Layouts/Dwindle-Layout/ for more
@@ -304,85 +311,94 @@ hl.device({
 local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 
 -- Example binds, see https://wiki.hypr.land/Configuring/Basics/Binds/ for more
-hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
-local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
+hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal), { description = "Apps: Terminal" })
+local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close(), { description = "Windows: Close window" })
 -- closeWindowBind:set_enabled(false)
-hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
-hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("emacsclient -c"))
-hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("emacs"))
-hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu))
-hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
-hl.bind(mainMod .. " + I", hl.dsp.layout("togglesplit"))    -- dwindle only
-hl.bind(mainMod .. " + O", hl.dsp.layout("movetoroot active"))
-hl.bind(mainMod .. " + U", hl.dsp.layout("swapsplit"))
-hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen())
-hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized" }))
+hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Session: Exit Hyprland" })
+hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(fileManager), { description = "Apps: File manager" })
+hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("emacsclient -c"), { description = "Apps: Emacs (client)" })
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("emacs"), { description = "Apps: Emacs (new instance)" })
+hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }), { description = "Windows: Toggle floating" })
+hl.bind(mainMod .. " + SPACE", hl.dsp.exec_cmd(menu), { description = "Apps: App launcher" })
+hl.bind(mainMod .. " + P", hl.dsp.window.pseudo(), { description = "Windows: Toggle pseudo-tiling" })
+hl.bind(mainMod .. " + I", hl.dsp.layout("togglesplit"), { description = "Layout: Toggle split direction" })    -- dwindle only
+hl.bind(mainMod .. " + O", hl.dsp.layout("movetoroot active"), { description = "Layout: Move window to root" })
+hl.bind(mainMod .. " + U", hl.dsp.layout("swapsplit"), { description = "Layout: Swap split" })
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen(), { description = "Windows: Fullscreen" })
+hl.bind(mainMod .. " + F", hl.dsp.window.fullscreen({ mode = "maximized" }), { description = "Windows: Maximize" })
 
 -- Move focus with mainMod + arrow keys
-hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + H",  hl.dsp.focus({ direction = "left" }))
-hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }))
-hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + K",    hl.dsp.focus({ direction = "up" }))
-hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }))
-hl.bind(mainMod .. " + J",  hl.dsp.focus({ direction = "down" }))
+hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }), { description = "Focus: Window left" })
+hl.bind(mainMod .. " + H",  hl.dsp.focus({ direction = "left" }), { description = "Focus: Window left" })
+hl.bind(mainMod .. " + right", hl.dsp.focus({ direction = "right" }), { description = "Focus: Window right" })
+hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }), { description = "Focus: Window right" })
+hl.bind(mainMod .. " + up",    hl.dsp.focus({ direction = "up" }), { description = "Focus: Window above" })
+hl.bind(mainMod .. " + K",    hl.dsp.focus({ direction = "up" }), { description = "Focus: Window above" })
+hl.bind(mainMod .. " + down",  hl.dsp.focus({ direction = "down" }), { description = "Focus: Window below" })
+hl.bind(mainMod .. " + J",  hl.dsp.focus({ direction = "down" }), { description = "Focus: Window below" })
 
 -- Switch workspaces with mainMod + [0-9]
 -- Move active window to a workspace with mainMod + SHIFT + [0-9]
 for i = 1, 10 do
     local key = i % 10 -- 10 maps to key 0
-    hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}))
-    hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }))
+    hl.bind(mainMod .. " + " .. key,             hl.dsp.focus({ workspace = i}), { description = "Workspaces: Go to workspace 1–10" })
+    hl.bind(mainMod .. " + SHIFT + " .. key,     hl.dsp.window.move({ workspace = i }), { description = "Workspaces: Move window to workspace 1–10" })
 end
 
 -- Resizing
-hl.bind(mainMod .. " + M", hl.dsp.layout("splitratio 2 exact"))
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.layout("splitratio 1 exact"))
-hl.bind(mainMod .. " + bracketleft", hl.dsp.layout("splitratio -0.5"))
-hl.bind(mainMod .. " + bracketright", hl.dsp.layout("splitratio 0.5"))
+hl.bind(mainMod .. " + M", hl.dsp.layout("splitratio 2 exact"), { description = "Layout: Maximize split ratio" })
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.layout("splitratio 1 exact"), { description = "Layout: Even split ratio" })
+hl.bind(mainMod .. " + bracketleft", hl.dsp.layout("splitratio -0.5"), { description = "Layout: Shrink split" })
+hl.bind(mainMod .. " + bracketright", hl.dsp.layout("splitratio 0.5"), { description = "Layout: Grow split" })
 
 -- Example special workspace (scratchpad)
 -- hl.bind(mainMod .. " + S",         hl.dsp.workspace.toggle_special("magic"))
 -- hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special:magic" }))
 
 -- Scroll through existing workspaces with mainMod + scroll
-hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + SHIFT + L", hl.dsp.focus({ workspace = "e+1" }))
-hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
-hl.bind(mainMod .. " + SHIFT + H",   hl.dsp.focus({ workspace = "e-1" }))
+hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }), { description = "Workspaces: Next workspace" })
+hl.bind(mainMod .. " + SHIFT + L", hl.dsp.focus({ workspace = "e+1" }), { description = "Workspaces: Next workspace" })
+hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }), { description = "Workspaces: Previous workspace" })
+hl.bind(mainMod .. " + SHIFT + H",   hl.dsp.focus({ workspace = "e-1" }), { description = "Workspaces: Previous workspace" })
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true, description = "Windows: Move (drag)" })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true, description = "Windows: Resize (drag)" })
 
 -- Laptop multimedia keys for volume and LCD brightness
-hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true })
-hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 1%+"), { locked = true, repeating = true })
-hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true })
-hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-"),      { locked = true, repeating = true })
-hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true })
-hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"),                  { locked = true, repeating = true })
-hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"),                  { locked = true, repeating = true })
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), { locked = true, repeating = true, description = "Media: Volume up 5%" })
+hl.bind("SHIFT + XF86AudioRaiseVolume", hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 1%+"), { locked = true, repeating = true, description = "Media: Volume up 1%" })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"),      { locked = true, repeating = true, description = "Media: Volume down 5%" })
+hl.bind("SHIFT + XF86AudioLowerVolume", hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 1%-"),      { locked = true, repeating = true, description = "Media: Volume down 1%" })
+hl.bind("XF86AudioMute",        hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),     { locked = true, repeating = true, description = "Media: Mute output" })
+hl.bind("XF86AudioMicMute",     hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"),   { locked = true, repeating = true, description = "Media: Mute microphone" })
+hl.bind("XF86MonBrightnessUp",  hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%+"),                  { locked = true, repeating = true, description = "Hardware: Brightness up" })
+hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl -e4 -n2 set 5%-"),                  { locked = true, repeating = true, description = "Hardware: Brightness down" })
 
 -- Requires playerctl
-hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true })
-hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
-hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true })
+hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true, description = "Media: Next track" })
+hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media: Play / pause" })
+hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"), { locked = true, description = "Media: Play / pause" })
+hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),   { locked = true, description = "Media: Previous track" })
 
 -- Screenshots
-hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("grimblast copy area"))
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("GRIMBLAST_EDITOR=\"satty --filename\" grimblast edit area"))
+hl.bind(mainMod .. " + S", hl.dsp.exec_cmd("grimblast copy area"), { description = "Screenshots: Copy area" })
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd("GRIMBLAST_EDITOR=\"satty --filename\" grimblast edit area"), { description = "Screenshots: Annotate area" })
 
 -- Custom
-hl.bind(mainMod .. " + B", hl.dsp.global("quickshell:toggle-bluetooth"))
-hl.bind(mainMod .. " + T", hl.dsp.global("quickshell:toggle-tray"))
-hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("rofi -show window"))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("rofi -show calc"))
+hl.bind(mainMod .. " + slash", hl.dsp.global("quickshell:toggle-launcher"), { description = "Shell: Launcher / keybinding help" })
+hl.bind(mainMod .. " + B", hl.dsp.global("quickshell:toggle-bluetooth"), { description = "Shell: Bluetooth" })
+hl.bind(mainMod .. " + T", hl.dsp.global("quickshell:toggle-tray"), { description = "Shell: System tray" })
+hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("rofi -show window"), { description = "Apps: Window switcher" })
+hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("~/.config/rofi/calc.sh"), { description = "Apps: Calculator" })
+hl.bind(mainMod .. " + A", hl.dsp.global("quickshell:toggle-audio"), { description = "Shell: Audio" })
+hl.bind(mainMod .. " + N", hl.dsp.global("quickshell:toggle-network"), { description = "Shell: Network" })
+hl.bind(mainMod .. " + G", hl.dsp.global("quickshell:toggle-media"), { description = "Shell: Media player" })
+hl.bind(mainMod .. " + Y", hl.dsp.global("quickshell:toggle-calendar"), { description = "Shell: Calendar" })
+hl.bind(mainMod .. " + Z", hl.dsp.global("quickshell:toggle-system"), { description = "Shell: System" })
+hl.bind(mainMod .. " + X", hl.dsp.global("quickshell:toggle-power"), { description = "Shell: Power menu" })
+hl.bind(mainMod .. " + SHIFT + B", hl.dsp.global("quickshell:toggle-bar"), { description = "Shell: Toggle bar" })
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("systemctl --user start wallpaper.service"), { description = "Shell: New wallpaper" })
 
 
 --------------------------------

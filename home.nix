@@ -11,8 +11,12 @@ let
   # hyprlandPkg = inputs.hyprland.packages.${pkgs.system};
 
   wallpaper-bin = pkgs.writers.writePython3Bin "wallpaper" {
-    libraries = with pkgs.python3Packages; [requests moderngl numpy pillow];
+    libraries = with pkgs.python3Packages; [moderngl numpy pillow];
   } (builtins.readFile ./wallpaper/wallpaper.py);
+
+  # Flake inputs whose packages should track upstream; `nup` bumps exactly these.
+  flakePackages = [ "omp" ];
+  rebuild = "sudo nixos-rebuild switch --flake \"$HOME/.dotfiles#$(hostname)\"";
 in
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -58,11 +62,11 @@ in
     discord
     protontricks
     glab
-    (google-chrome.override {
-      commandLineArgs = [
-	"--force-device-scale-factor=0.8"
-      ];
-    })
+    # (google-chrome.override {
+    #   commandLineArgs = [
+    # 	"--force-device-scale-factor=0.8"
+    #   ];
+    # })
     roboto
     lexend
     direnv
@@ -100,8 +104,11 @@ in
 	physics ec cm-super
       ]
     ))
-    rofi
-    rofi-calc
+    # Wrapper sets the plugin path itself; no ROFI_PLUGIN_PATH needed.
+    (rofi.override { plugins = [ rofi-calc ]; })
+    libqalculate
+    wl-clipboard
+    brightnessctl
     qalculate-qt
     audacious
     cmake
@@ -132,6 +139,7 @@ in
   services.emacs = {
     enable = true;
     client.enable = true;
+    startWithUserSession = "graphical";
   };
   programs.git = {
     enable = true;
@@ -160,7 +168,10 @@ setopt aliases
     '';
 
     shellAliases = {
-      nrs = "sudo nixos-rebuild switch --flake \"$HOME/.dotfiles#$(hostname)\"";
+      # Rebuild from the current lock; nothing is updated.
+      nrs = rebuild;
+      # Bump the flake-provided packages to upstream HEAD, then rebuild.
+      nup = "nix flake update ${builtins.concatStringsSep " " flakePackages} --flake \"$HOME/.dotfiles\" && ${rebuild}";
     };
   };
   programs.quickshell.enable = true;
@@ -224,8 +235,19 @@ setopt aliases
     Service = {
       Type = "oneshot";
       ExecStart = "${wallpaper-bin}/bin/wallpaper";
+      Environment = [
+        # Out-of-store shader: edits apply without a rebuild.
+        "WALLPAPER_SHADER=%h/.dotfiles/wallpaper/main.frag"
+        # hyprctl/makoctl come from the system and user profiles.
+        "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/%u/bin"
+      ];
     };
   };
+  # mako refuses to start when its include file is missing.
+  systemd.user.tmpfiles.rules = [
+    "d %h/.cache/wallpaper 0755 - - -"
+    "f %h/.cache/wallpaper/mako-colors 0644 - - -"
+  ];
   systemd.user.timers.wallpaper = {
     Unit = {
       Description = "Trigger wallpaper generator periodically";
@@ -282,7 +304,6 @@ setopt aliases
     XDG_DATA_DIRS = "$XDG_DATA_DIRS:$HOME/.nix-profile/share:/run/current-system/sw/share";
     XCURSOR_SIZE = "24";
     HYPRCURSOR_SIZE = "24";
-    ROFI_PLUGIN_PATH = "/etc/profiles/per-user/ben/lib/rofi";
   };
 
   # Let Home Manager install and manage itself.

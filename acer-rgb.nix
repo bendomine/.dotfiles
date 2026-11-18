@@ -17,13 +17,16 @@ let
     # Pull in the headers and build tools for your current kernel
     nativeBuildInputs = config.boot.kernelPackages.kernel.moduleBuildDependencies;
 
-    buildPhase = ''
-      make -C ${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build M=$(pwd) modules
-    '';
-
-    installPhase = ''
-      make -C ${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build M=$(pwd) INSTALL_MOD_PATH=$out modules_install
-    '';
+    # kernelModuleMakeFlags makes kbuild's modules_install sign the module and
+    # emit the facer.ko.cer certificate that the module aggregator requires.
+    makeFlags = config.boot.kernelPackages.kernelModuleMakeFlags ++ [
+      "-C"
+      "${config.boot.kernelPackages.kernel.dev}/lib/modules/${config.boot.kernelPackages.kernel.modDirVersion}/build"
+      "M=$(PWD)"
+      "INSTALL_MOD_PATH=${placeholder "out"}"
+    ];
+    buildFlags = [ "modules" ];
+    installTargets = [ "modules_install" ];
   };
 in
 {

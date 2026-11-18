@@ -1,221 +1,150 @@
 import Quickshell
 import Quickshell.Services.SystemTray
-import Quickshell.Wayland
-import Quickshell.Hyprland
 import Quickshell.Widgets
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls
+import "../shared"
+import ".."
 
-PopupWindow {
-    id: root 
-    required property Item anchorPoint
-    required property real iconSize
-    property real xOffset: iconSize - 3
-    property real yOffset: 0
-    property real dWidth: 150
-    property real dHeight: 150
-    property real animDuration: 500
-    property real animProgress: windowActive ? 1.0 : -0.1
-    property bool displayWindow: animProgress > -0.1
-    property bool windowActive
-    property color bgColor: "white"
-    property color fontColor: "black"
-    property list<string> menuIds: [
-	"Antigravity_status_icon_1",
-	"spotify-client",
-	"steam"
-    ]
+// System tray pill + popup (quickshell:toggle-tray).
+// Grid navigation: h/j/k/l or arrows; Return/Space activates (or opens the menu for
+// menu-only items and `menuIds`); Shift+Return / m / right click opens the item menu.
+StatusBox {
+	id: root
+	property list<string> menuIds: [
+		"Antigravity_status_icon_1",
+		"spotify-client",
+		"steam"
+	]
+	readonly property int columns: 5
+	readonly property int cellSize: 44
 
-    Connections {
-	target: anchorPoint
-	function onXChanged() {
-	    if (!root.displayWindow) {
-		root.visible = false
-		Qt.callLater(() => root.visible = true)
-	    }
+	active: popup.open
+
+	function openMenu(cell, item) {
+		if (!item.hasMenu)
+			return;
+		const pos = cell.mapToItem(null, cell.width / 2, cell.height);
+		menuAnchor.anchor.rect.x = pos.x;
+		menuAnchor.anchor.rect.y = pos.y;
+		menuAnchor.menu = item.menu;
+		menuAnchor.open();
 	}
-    }
-    anchor.gravity: Edges.Bottom | Edges.Left
-    anchor.item: anchorPoint
-    anchor.rect.x: xOffset
-    anchor.rect.y: yOffset
-    visible: true
-    color: "transparent"
 
-    implicitWidth: displayWindow ? dWidth : iconSize + 2
-    implicitHeight: displayWindow ? dHeight : iconSize + 2
-
-    function mix(x, y, a, b) {
-	a /= b;
-	a = Math.min(Math.max(a, 0.0), 1.0);
-	return x * (1 - a) + y * a;
-    }
-
-    Behavior on animProgress { NumberAnimation {
-	duration: animDuration
-	easing.type: Easing.OutQuart
-    } }
-
-    Rectangle {
-	anchors.right: parent.right
-	HoverHandler {
-	    id: displayHandler
-	    onHoveredChanged: {
-		if (hovered) windowActive = true;
-		else if (!menuAnchor.visible) windowActive = false;
-	    }
+	Glyph {
+		text: "󱊖"
+		color: root.fg
 	}
-	clip: true
-	implicitWidth: mix(iconSize, dWidth, animProgress, 0.4)
-	implicitHeight: mix(iconSize, dHeight, animProgress - 0.4, 0.6)
-	color: bgColor
-	radius: iconSize / 2
 
-	Behavior on color { ColorAnimation { duration: animDuration * 0.67 } }
+	QsMenuAnchor {
+		id: menuAnchor
+		anchor.window: popup
+	}
 
-	ColumnLayout {
-	    anchors.fill: parent
-	    spacing: 1
-	    Layout.fillWidth: true
-	    Layout.preferredHeight: title.implicitHeight
-	    Item {
-		Layout.fillWidth: true
-		Layout.preferredHeight: title.height
-		RowLayout {
-		    layoutDirection: Qt.RightToLeft
-		    id: title
-		    anchors.right: parent.right
-		    anchors.left: parent.left
-		    Rectangle {
-			color: "transparent"
-			Layout.preferredWidth: iconSize
-			Layout.preferredHeight: iconSize
-			Text {
-			    anchors.centerIn: parent
-			    text: "󱊖"
-			    font.pointSize: 12
-			    color: root.fontColor
+	BarPopup {
+		id: popup
+		anchorItem: root
+		shortcutName: "toggle-tray"
+		navColumns: root.columns
+		contentWidth: root.columns * root.cellSize + (root.columns - 1) * grid.columnSpacing
+		// Keep the popup open (and release the focus grab) while an item menu is shown.
+		keepOpen: menuAnchor.visible
+		suspendGrab: menuAnchor.visible
+
+		PopupHeader {
+			icon: "󱊖"
+			title: "System Tray"
+			subtitle: {
+				const item = popup.focusItem;
+				if (item && item.trayItem)
+					return item.trayItem.tooltipTitle || item.trayItem.title || item.trayItem.id;
+				return SystemTray.items.values.length + " items";
 			}
-			/* Layout.alignment: Qt.AlignRight */
-		    }
-		    Item {
-			Layout.fillWidth: true
-		    }
-		    Text {
-			text: "System Tray"
-			color: root.fontColor
-			Layout.alignment: Qt.AlignLeft
-			Layout.leftMargin: 5
-		    }
 		}
-	    }
-
-	    Rectangle {
-		Layout.alignment: Qt.AlignHCenter
-		Layout.maximumWidth: parent.width - 10
-		Layout.fillWidth: true
-		color: "lightgrey"
-		implicitHeight: 2
-	    }
-
-	    ScrollView {
-		id: scrollView
-		Layout.fillWidth: true
-		Layout.fillHeight: true
-		Layout.alignment: Qt.AlignHCenter
-		Layout.maximumWidth: parent.width - 10
-		clip: true
-		ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
 		GridLayout {
-		    width: scrollView.availableWidth
-		    rows: 5
-		    columns: 5
-		    QsMenuAnchor {
-			id: menuAnchor
-			anchor.window: root
-		    }
-		    Repeater {
-			model: SystemTray.items
-			delegate: Rectangle {
-			    id: child
-			    implicitWidth: 20
-			    implicitHeight: 20
-			    color: "red"
-			    MouseArea {
-				anchors.fill: parent
-				cursorShape: Qt.PointingHandCursor
-				acceptedButtons: Qt.LeftButton | Qt.RightButton
-				onClicked: (mouse) => {
-				    if (modelData.onlyMenu || (modelData.hasMenu && mouse.button == Qt.RightButton) || menuIds.includes(modelData.id)) {
-					var mapped = child.mapToItem(null, mouse.x, mouse.y)
-					menuAnchor.anchor.rect.x = mapped.x
-					menuAnchor.anchor.rect.y = mapped.y
-					menuAnchor.menu = modelData.menu
-					menuAnchor.open()
-				    } else {
-					modelData.activate()
-				    }
+			id: grid
+			Layout.fillWidth: true
+			columns: root.columns
+			columnSpacing: Theme.spacingSmall
+			rowSpacing: Theme.spacingSmall
+
+			Repeater {
+				model: SystemTray.items
+
+				delegate: Rectangle {
+					id: cell
+					required property var modelData
+					readonly property var trayItem: modelData
+					readonly property bool hovered: mouse.containsMouse
+					property bool navigable: true
+					property bool keyFocused: false
+
+					function activate() {
+						if (modelData.onlyMenu || root.menuIds.includes(modelData.id))
+							root.openMenu(cell, modelData);
+						else
+							modelData.activate();
+					}
+					function activateAlt() {
+						root.openMenu(cell, modelData);
+					}
+
+					implicitWidth: root.cellSize
+					implicitHeight: root.cellSize
+					radius: Theme.radiusSmall
+					color: keyFocused || hovered ? Theme.surfaceVariant : "transparent"
+					border.width: keyFocused ? 1 : 0
+					border.color: Theme.accent
+					Behavior on color { ColorAnimation { duration: Theme.animFast } }
+
+					MouseArea {
+						id: mouse
+						anchors.fill: parent
+						hoverEnabled: true
+						cursorShape: Qt.PointingHandCursor
+						acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+						onContainsMouseChanged: {
+							if (containsMouse)
+								popup.setFocusItem(cell);
+							else if (popup.focusItem === cell)
+								popup.setFocusItem(null);
+						}
+						onClicked: event => {
+							if (event.button === Qt.MiddleButton)
+								cell.modelData.secondaryActivate();
+							else if (cell.modelData.onlyMenu || (cell.modelData.hasMenu && event.button == Qt.RightButton) || root.menuIds.includes(cell.modelData.id))
+								root.openMenu(cell, cell.modelData);
+							else
+								cell.modelData.activate();
+						}
+					}
+
+					IconImage {
+						source: cell.modelData.icon
+						implicitSize: 22
+						anchors.centerIn: parent
+						visible: !override.visible
+					}
+					// Prefer an icon-theme icon named after the item id when one exists.
+					IconImage {
+						id: override
+						source: Quickshell.iconPath(cell.modelData.id, true)
+						implicitSize: 22
+						anchors.centerIn: parent
+						visible: status === Image.Ready
+					}
 				}
-			    }
-			    IconImage {
-				source: modelData.icon
-				implicitSize: 20
-				anchors.centerIn: parent
-			    }
-			    IconImage {
-				id: trayItem
-				source: modelData.id
-				implicitSize: 20
-				anchors.centerIn: parent
-				visible: status === Image.Ready
-			    }
 			}
-		    }
 		}
-	    }
+
+		StyledText {
+			Layout.fillWidth: true
+			Layout.margins: Theme.spacing
+			visible: SystemTray.items.values.length === 0
+			text: "No tray items"
+			color: Theme.foregroundMuted
+			horizontalAlignment: Text.AlignHCenter
+		}
 	}
-    }
-    GlobalShortcut {
-	description: "Toggles the system tray."
-	name: "toggle-tray"
-	onPressed: windowActive = !windowActive;
-    }
-    /* Shortcut { */
-    /* 	sequence: "j" */
-    /* 	onActivated: { */
-    /* 	    devicesContainer.focusIdx ++; */
-    /* 	    if (devicesContainer.focusIdx >= connectedDevices.count + knownDevices.count + otherDevices.count) */
-    /* 		devicesContainer.focusIdx = 0; */
-    /* 	} */
-    /* } */
-    /* Shortcut { */
-    /* 	sequence: "k" */
-    /* 	onActivated: { */
-    /* 	    devicesContainer.focusIdx --; */
-    /* 	    if (devicesContainer.focusIdx < 0) */
-    /* 		devicesContainer.focusIdx = connectedDevices.count + knownDevices.count + otherDevices.count - 1 */
-    /* 	} */
-    /* } */
-    /* Shortcut { */
-    /* 	sequences: ["Space", "Return"] */
-    /* 	onActivated: { */
-    /* 	    if (devicesContainer.focusIdx < 0) return; */
-    /* 	    if (devicesContainer.focusIdx < connectedDevices.count) */
-    /* 		connectedDevices.itemAt(devicesContainer.focusIdx).action(); */
-    /* 	    else if (devicesContainer.focusIdx < knownDevices.count + connectedDevices.count) */
-    /* 		knownDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count).action(); */
-    /* 	    else otherDevices.itemAt(devicesContainer.focusIdx - connectedDevices.count - knownDevices.count).action(); */
-    /* 	} */
-    /* } */
-    /* onWindowActiveChanged: { */
-    /* 	grab.active = windowActive; */
-    /* 	devicesContainer.focusIdx = -1; */
-    /* } */
-    /* HyprlandFocusGrab { */
-    /* 	id: grab */
-    /* 	windows: [ root ] */
-    /* 	active: false */
-    /* } */
 }

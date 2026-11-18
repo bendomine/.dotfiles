@@ -1,0 +1,163 @@
+/* Wallpaper-driven rofi theme. Colors come only from the wp-* variables. */
+@import "colors-default.rasi"
+/* Optional: absent until the wallpaper script first runs. */
+?import "~/.cache/wallpaper/colors.rasi"
+
+* {
+	font:             "JetBrainsMono Nerd Font Propo 11";
+	background-color: transparent;
+	text-color:       @wp-foreground;
+	spacing:          0;
+	margin:           0;
+	padding:          0;
+}
+
+window {
+	location:         center;
+	anchor:           center;
+	width:            640px;
+	border:           2px solid;
+	border-color:     @wp-border;
+	border-radius:    12px;
+	background-color: @wp-background;
+	padding:          14px;
+}
+
+mainbox {
+	spacing:  10px;
+	children: [ inputbar, message, listview, mode-switcher ];
+}
+
+inputbar {
+	spacing:          10px;
+	padding:          6px 6px 6px 6px;
+	border-radius:    10px;
+	background-color: @wp-surface;
+	children:         [ prompt, entry, num-filtered-rows ];
+}
+
+prompt {
+	padding:          4px 12px;
+	border-radius:    8px;
+	background-color: @wp-accent;
+	text-color:       @wp-on-accent;
+	vertical-align:   0.5;
+}
+
+entry {
+	placeholder:       "Search…";
+	placeholder-color: @wp-foreground-muted;
+	cursor:            text;
+	cursor-color:      @wp-accent;
+	vertical-align:    0.5;
+}
+
+num-filtered-rows {
+	text-color:     @wp-foreground-muted;
+	vertical-align: 0.5;
+	padding:        0 8px 0 0;
+}
+
+message {
+	border-radius:    10px;
+	background-color: @wp-surface;
+	border:           0 0 0 3px solid;
+	border-color:     @wp-accent;
+}
+
+textbox {
+	padding:        8px 12px;
+	text-color:     @wp-foreground;
+	vertical-align: 0.5;
+}
+
+error-message {
+	padding:          12px;
+	border-radius:    12px;
+	background-color: @wp-background;
+	border:           2px solid;
+	border-color:     @wp-urgent;
+}
+
+listview {
+	lines:        8;
+	columns:      1;
+	fixed-height: true;
+	dynamic:      true;
+	scrollbar:    true;
+	spacing:      2px;
+}
+
+scrollbar {
+	handle-width:     4px;
+	handle-color:     @wp-surface-variant;
+	border-radius:    4px;
+	background-color: transparent;
+}
+
+element {
+	orientation:   horizontal;
+	children:      [ element-icon, element-text ];
+	spacing:       10px;
+	padding:       7px 10px;
+	border-radius: 8px;
+	cursor:        pointer;
+}
+
+element normal.normal,
+element alternate.normal {
+	background-color: transparent;
+	text-color:       @wp-foreground;
+}
+element normal.active,
+element alternate.active {
+	background-color: transparent;
+	text-color:       @wp-accent-alt;
+}
+element normal.urgent,
+element alternate.urgent {
+	background-color: transparent;
+	text-color:       @wp-urgent;
+}
+element selected.normal,
+element selected.active {
+	background-color: @wp-accent;
+	text-color:       @wp-on-accent;
+}
+element selected.urgent {
+	background-color: @wp-urgent;
+	text-color:       @wp-on-accent;
+}
+
+element-icon {
+	size:           1.25em;
+	vertical-align: 0.5;
+	text-color:     inherit;
+	cursor:         inherit;
+}
+
+element-text {
+	vertical-align:   0.5;
+	text-color:       inherit;
+	highlight:        bold;
+	cursor:           inherit;
+}
+
+mode-switcher {
+	spacing:          6px;
+	padding:          4px;
+	border-radius:    10px;
+	background-color: @wp-surface;
+}
+
+button {
+	padding:       5px 10px;
+	border-radius: 8px;
+	text-color:    @wp-foreground-muted;
+	cursor:        pointer;
+}
+
+button selected {
+	background-color: @wp-surface-variant;
+	text-color:       @wp-accent;
+}
