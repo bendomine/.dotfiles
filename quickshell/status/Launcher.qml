@@ -262,14 +262,38 @@ StatusBox {
 
 	// ── Pill ─────────────────────────────────────────────────────────────
 	active: popup.open
-	padding: 8
+	// Circular pill: logo box plus equal padding fills the pill height.
+	padding: (Theme.pillHeight - logo.implicitWidth) / 2
 
-	Glyph {
-		text: "󱄅"
-		font.pixelSize: Theme.iconSizeLarge
-		color: root.active ? root.fg : Theme.accent
+	// The font's line box puts the glyph's ink above center, so center the visible
+	// ink (tight bounds) in a square box instead; rotation then pivots on the logo's
+	// own center rather than wobbling.
+	Item {
+		id: logo
+		implicitWidth: Theme.iconSizeLarge
+		implicitHeight: Theme.iconSizeLarge
 		rotation: root.hovered ? 60 : 0
 		Behavior on rotation { NumberAnimation { duration: Theme.animSlow; easing.type: Easing.OutBack } }
+
+		Glyph {
+			id: logoGlyph
+			text: "󱄅"
+			font.pixelSize: Theme.iconSizeLarge
+			color: root.active ? root.fg : Theme.accent
+			horizontalAlignment: Text.AlignLeft
+			// Ink center relative to the text item's origin (baseline sits at ascent).
+			x: logo.width / 2 - (logoInk.tightBoundingRect.x + logoInk.tightBoundingRect.width / 2)
+			y: logo.height / 2 - (logoFont.ascent + logoInk.tightBoundingRect.y + logoInk.tightBoundingRect.height / 2)
+		}
+		TextMetrics {
+			id: logoInk
+			font: logoGlyph.font
+			text: logoGlyph.text
+		}
+		FontMetrics {
+			id: logoFont
+			font: logoGlyph.font
+		}
 	}
 
 	// Rounded key-combo label.
