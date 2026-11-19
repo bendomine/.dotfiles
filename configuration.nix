@@ -154,7 +154,8 @@ in {
 
   # Keyboard rgb
 
-  environment.pathsToLink = [ "/share/icons" ];
+  # color-schemes: Breeze schemes the wallpaper script copies into kdeglobals.
+  environment.pathsToLink = [ "/share/icons" "/share/color-schemes" ];
   
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;

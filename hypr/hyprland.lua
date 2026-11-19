@@ -69,6 +69,9 @@ hl.env("XDG_SESSION_TYPE", "wayland")
 -- repaint when the wallpaper script swaps BreezeLight/BreezeDark into it.
 hl.env("QT_QPA_PLATFORMTHEME", "kde")
 hl.env("KDE_SESSION_VERSION", "6")
+-- Breeze (installed for its color schemes) caches toolbar colours that plain Qt
+-- apps never reload; Fusion draws everything from the live palette.
+hl.env("QT_STYLE_OVERRIDE", "Fusion")
 -- hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme 'capitaine-cursors'")
 -----------------------
 ----- PERMISSIONS -----
