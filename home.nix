@@ -253,7 +253,7 @@ setopt aliases
       Description = "Trigger wallpaper generator periodically";
     };
     Timer = {
-      OnCalendar = "*:0,15,30,45";
+      OnCalendar = "daily";
       Persistent = true;
     };
     Install = {
