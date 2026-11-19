@@ -623,7 +623,8 @@ def apply_kde_colors(mode):
         return
     with open(path) as f:
         scheme_text = f.read()
-    config = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    config = (os.environ.get("XDG_CONFIG_HOME")
+              or os.path.expanduser("~/.config"))
     target = os.path.join(config, "kdeglobals")
     try:
         with open(target) as f:
@@ -650,9 +651,13 @@ def apply_theme(theme):
     # xdg-desktop-portal-gtk serves color-scheme to apps (GTK4/libadwaita,
     # Chromium, Electron); GTK3 only follows gtk-theme.
     dark = theme["mode"] == "dark"
-    for key, value in (("color-scheme", "prefer-dark" if dark else "prefer-light"),
-                       ("gtk-theme", "Adwaita-dark" if dark else "Adwaita")):
-        run("dconf", "write", f"/org/gnome/desktop/interface/{key}", f"'{value}'")
+    settings = {
+        "color-scheme": "prefer-dark" if dark else "prefer-light",
+        "gtk-theme": "Adwaita-dark" if dark else "Adwaita",
+    }
+    for key, value in settings.items():
+        run("dconf", "write", f"/org/gnome/desktop/interface/{key}",
+            f"'{value}'")
 
 
 def apply_wallpaper(path, mons):
