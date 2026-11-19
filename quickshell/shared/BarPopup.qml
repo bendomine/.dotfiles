@@ -217,10 +217,19 @@ PopupWindow {
 			for (let f = item.parent; f; f = f.parent) {
 				if (f.contentY !== undefined && f.contentItem !== undefined && f.flicking !== undefined) {
 					const p = item.mapToItem(f.contentItem, 0, 0);
-					if (p.y < f.contentY)
-						f.contentY = Math.max(0, p.y - 4);
-					else if (p.y + item.height > f.contentY + f.height)
-						f.contentY = Math.min(f.contentHeight - f.height, p.y + item.height - f.height + 4);
+					// ScrollList: measure against where it is heading and ease there.
+					const top = f.targetY !== undefined ? f.targetY : f.contentY;
+					let y = top;
+					if (p.y < top)
+						y = Math.max(0, p.y - 4);
+					else if (p.y + item.height > top + f.height)
+						y = Math.min(f.contentHeight - f.height, p.y + item.height - f.height + 4);
+					if (y !== top) {
+						if (f.scrollTo !== undefined)
+							f.scrollTo(y, true);
+						else
+							f.contentY = y;
+					}
 					return;
 				}
 			}
