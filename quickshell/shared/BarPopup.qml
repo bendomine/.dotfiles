@@ -558,7 +558,10 @@ PopupWindow {
 	color: "transparent"
 	implicitWidth: panelWidth + 2 * shadowMargin
 	implicitHeight: panelHeight + 2 * shadowMargin
-	mask: Region { item: frame }
+	// The mask must use an untransformed item: Region tracks geometry, not transforms, so masking
+	// `frame` captured its open-animation scale (94% x 90%) and let the pointer fall through at
+	// the sides and bottom, which then closed hover-opened popups.
+	mask: Region { item: maskArea }
 
 	anchor.item: anchorItem
 	anchor.edges: Edges.Bottom
@@ -575,6 +578,14 @@ PopupWindow {
 		anchor.rect.y = 0;
 		anchor.rect.width = anchorItem.width;
 		anchor.rect.height = Math.max(1, below + Theme.popupGap - shadowMargin);
+	}
+
+	Item {
+		id: maskArea
+		x: root.shadowMargin
+		y: root.shadowMargin
+		width: root.panelWidth
+		height: root.panelHeight
 	}
 
 	Item {
