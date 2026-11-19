@@ -152,7 +152,9 @@ BarPopup {
 		spacing: Theme.spacingSmall
 
 		StyledText {
-			text: Qt.formatTime(clock.date, "h:mm")
+			// Qt only uses 12-hour "h" when AP is in the same format string; strip the suffix
+			// here since AM/PM is shown separately beside it.
+			text: Qt.formatTime(clock.date, "h:mm AP").replace(/\s*[AP]M$/i, "")
 			font.pixelSize: 38
 			font.weight: Font.Bold
 		}
