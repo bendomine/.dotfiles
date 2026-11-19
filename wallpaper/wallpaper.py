@@ -2,7 +2,8 @@
 
 Renders a domain-warped fBM noise field (main.frag) coloured by a randomly
 generated OKLCH gradient, shows it with hyprpaper and derives a matching
-desktop theme (quickshell, rofi, hyprland, mako) from the same palette.
+desktop theme (quickshell, rofi, hyprland, mako) from the same palette. The
+theme's light/dark mode also switches GTK, Qt and KDE apps.
 
     wallpaper                    render, apply and write the theme
     wallpaper --seed N           same, reproducibly
@@ -572,6 +573,70 @@ def save_wallpaper(img, directory, seed):
     return path
 
 
+KDE_SCHEMES = {"dark": "BreezeDark", "light": "BreezeLight"}
+KDE_SCHEME_GROUPS = ("[Colors:", "[ColorEffects:", "[WM]")
+
+
+def ini_groups(text):
+    """Split KDE config text into (header, lines); the first header is None."""
+    groups = [(None, [])]
+    for line in text.splitlines():
+        if line.startswith("["):
+            groups.append((line, []))
+        else:
+            groups[-1][1].append(line)
+    return groups
+
+
+def kdeglobals_text(current, scheme_text, scheme):
+    """`current` with its colour groups replaced by those of `scheme_text`."""
+    groups = [(h, ls) for h, ls in ini_groups(current)
+              if not (h and h.startswith(KDE_SCHEME_GROUPS))]
+    groups += [(h, ls) for h, ls in ini_groups(scheme_text)
+               if h and h.startswith(KDE_SCHEME_GROUPS)]
+    general = next((ls for h, ls in groups if h == "[General]"), None)
+    if general is None:
+        general = []
+        groups.append(("[General]", general))
+    general[:] = [f"ColorScheme={scheme}"] + [
+        line for line in general if not line.startswith("ColorScheme=")]
+    blocks = []
+    for header, lines in groups:
+        block = "\n".join(filter(None, (header, "\n".join(lines).strip("\n"))))
+        if block:
+            blocks.append(block)
+    return "\n\n".join(blocks) + "\n"
+
+
+def apply_kde_colors(mode):
+    """Copy the Breeze scheme for `mode` into kdeglobals and signal Qt's
+    built-in KDE platform theme (QT_QPA_PLATFORMTHEME=kde), which re-reads
+    kdeglobals and repaints running Qt apps."""
+    scheme = KDE_SCHEMES[mode]
+    dirs = os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share"
+    for d in dirs.split(":"):
+        path = os.path.join(d, "color-schemes", scheme + ".colors")
+        if os.path.isfile(path):
+            break
+    else:
+        print(f"kde: {scheme}.colors not found", file=sys.stderr)
+        return
+    with open(path) as f:
+        scheme_text = f.read()
+    config = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
+    target = os.path.join(config, "kdeglobals")
+    try:
+        with open(target) as f:
+            current = f.read()
+    except FileNotFoundError:
+        current = ""
+    write_atomic(target, kdeglobals_text(current, scheme_text, scheme))
+    # Qt listens for this from any sender; Plasma's portal normally sends it.
+    run("busctl", "--user", "emit", "/org/freedesktop/portal/desktop",
+        "org.freedesktop.portal.Settings", "SettingChanged", "ssv",
+        "org.kde.kdeglobals.General", "ColorScheme", "s", scheme)
+
+
 def apply_theme(theme):
     hc = hypr_colors(theme)
     run("hyprctl", "dispatch",
@@ -581,6 +646,13 @@ def apply_theme(theme):
         f"decoration={{shadow={{color={hc['shadow']}}}}}"
         "}) end")
     run("makoctl", "reload")
+    apply_kde_colors(theme["mode"])
+    # xdg-desktop-portal-gtk serves color-scheme to apps (GTK4/libadwaita,
+    # Chromium, Electron); GTK3 only follows gtk-theme.
+    dark = theme["mode"] == "dark"
+    for key, value in (("color-scheme", "prefer-dark" if dark else "prefer-light"),
+                       ("gtk-theme", "Adwaita-dark" if dark else "Adwaita")):
+        run("dconf", "write", f"/org/gnome/desktop/interface/{key}", f"'{value}'")
 
 
 def apply_wallpaper(path, mons):

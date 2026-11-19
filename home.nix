@@ -84,6 +84,12 @@ in
     kdePackages.qtdeclarative
     kdePackages.qtwayland
     kdePackages.qtsvg
+    # BreezeLight/BreezeDark color schemes: the wallpaper script copies the
+    # one matching the theme's light/dark mode into kdeglobals for Qt apps.
+    kdePackages.breeze
+    # Adwaita-dark for GTK3 apps (GTK3 only ships Adwaita built in); the
+    # wallpaper script switches gtk-theme between Adwaita and Adwaita-dark.
+    gnome-themes-extra
     # papirus-icon-theme
     qt6.qtsvg
     glslviewer

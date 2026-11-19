@@ -64,6 +64,11 @@ hl.env("HYPRCURSOR_SIZE", "36")
 hl.env("HYPRCURSOR_THEME", "capitaine-cursors")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_TYPE", "wayland")
+-- Qt's built-in KDE theme (no Plasma needed; it activates on KDE_SESSION_VERSION)
+-- reloads ~/.config/kdeglobals on a change signal, so running Qt and KDE apps
+-- repaint when the wallpaper script swaps BreezeLight/BreezeDark into it.
+hl.env("QT_QPA_PLATFORMTHEME", "kde")
+hl.env("KDE_SESSION_VERSION", "6")
 -- hl.exec_cmd("gsettings set org.gnome.desktop.interface cursor-theme 'capitaine-cursors'")
 -----------------------
 ----- PERMISSIONS -----
