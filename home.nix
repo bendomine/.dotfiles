@@ -80,15 +80,9 @@ in
     discord
     protontricks
     glab
-    # (google-chrome.override {
-    #   commandLineArgs = [
-    # 	"--force-device-scale-factor=0.8"
-    #   ];
-    # })
     roboto
     lexend
     direnv
-    # basedpyright
     pyright
     godot
     playerctl
@@ -96,8 +90,7 @@ in
     satty
     claude-code
     heroic
-    # antigravity
-    domine
+    (google-fonts.override { fonts = [ "Domine" ]; } )
     blender
     kdePackages.qtdeclarative
     kdePackages.qtwayland
@@ -108,7 +101,6 @@ in
     # Adwaita-dark for GTK3 apps (GTK3 only ships Adwaita built in); the
     # wallpaper script switches gtk-theme between Adwaita and Adwaita-dark.
     gnome-themes-extra
-    # papirus-icon-theme
     qt6.qtsvg
     glslviewer
     vips
@@ -125,11 +117,10 @@ in
       ps: with ps; [
 	dvisvgm dvipng
 	wrapfig amsmath ulem hyperref capt-of
-	physics ec cm-super
+	physics ec cm-super xcolor
       ]
     ))
     rofi
-    # qalc: the quickshell calculator popup (quickshell/scripts/calc.py).
     libqalculate
     wl-clipboard
     brightnessctl
@@ -146,6 +137,7 @@ in
 	"--force-device-scale-factor=0.8"
       ];
     })
+    R
     # # It is sometimes useful to fine-tune packages, for example, by applying
     # # overrides. You can do that directly here, just don't forget the
     # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
