@@ -25,6 +25,8 @@ Singleton {
 		{ name: "toggle-calendar", description: "Toggle the calendar popup" },
 		{ name: "toggle-system", description: "Toggle the system popup" },
 		{ name: "toggle-power", description: "Toggle the power menu" },
+		{ name: "toggle-wallpaper", description: "Toggle the wallpaper theme chooser" },
+		{ name: "toggle-calculator", description: "Toggle the calculator" },
 		{ name: "toggle-launcher", description: "Toggle the launcher / keybinding help menu" }
 	]
 

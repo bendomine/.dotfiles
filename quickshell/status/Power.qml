@@ -3,27 +3,24 @@ import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import "../shared"
+import "../lock"
 import ".."
 
 // Power pill + menu (quickshell:toggle-power). Log out, reboot and shut down need
 // a second activation within 3 s. Each row also has a single-key shortcut (shown
-// on the right); pressing it focuses and activates the row.
+// on the right); pressing it focuses and activates the row. Lock goes straight to
+// the shell's own LockScreen; the other actions run `command` detached.
 StatusBox {
 	id: root
-	property bool hasHyprlock: false
 
 	readonly property var actions: [
-		{ id: "lock", icon: "󰌾", text: "Lock", key: "x", command: ["hyprlock"] },
+		{ id: "lock", icon: "󰌾", text: "Lock", key: "x" },
 		{ id: "logout", icon: "󰍃", text: "Log out", key: "e", confirm: true, command: ["sh", "-c", "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"] },
 		{ id: "suspend", icon: "󰤄", text: "Suspend", key: "s", command: ["systemctl", "suspend"] },
 		{ id: "reboot", icon: "󰜉", text: "Reboot", key: "r", confirm: true, command: ["systemctl", "reboot"] },
 		{ id: "poweroff", icon: "󰐥", text: "Shut down", key: "d", confirm: true, command: ["systemctl", "poweroff"] },
 		{ id: "reload", icon: "󰑓", text: "Reload Hyprland", key: "c", command: ["hyprctl", "reload"] }
 	]
-
-	function available(action) {
-		return action.id !== "lock" || hasHyprlock;
-	}
 
 	function trigger(action) {
 		if (action.confirm && d.confirming !== action.id) {
@@ -34,6 +31,10 @@ StatusBox {
 		d.confirming = "";
 		confirmTimer.stop();
 		popup.close();
+		if (action.id === "lock") {
+			LockState.lock();
+			return;
+		}
 		runner.command = action.command;
 		runner.startDetached();
 	}
@@ -51,14 +52,6 @@ StatusBox {
 
 	Process {
 		id: runner
-	}
-
-	// hyprlock is optional: probe for it at startup and whenever the menu opens.
-	Process {
-		id: lockProbe
-		running: true
-		command: ["sh", "-c", "command -v hyprlock >/dev/null 2>&1"]
-		onExited: exitCode => root.hasHyprlock = exitCode === 0
 	}
 
 	active: popup.open
@@ -97,9 +90,7 @@ StatusBox {
 		contentWidth: 240
 
 		onOpenChanged: {
-			if (open) {
-				lockProbe.running = true;
-			} else {
+			if (!open) {
 				d.confirming = "";
 				confirmTimer.stop();
 			}
@@ -108,7 +99,7 @@ StatusBox {
 		onKeyPressed: event => {
 			const k = event.text.toLowerCase();
 			const i = root.actions.findIndex(a => a.key === k);
-			if (i < 0 || !root.available(root.actions[i]))
+			if (i < 0)
 				return;
 			event.accepted = true;
 			const row = rows.itemAt(i);
@@ -130,7 +121,6 @@ StatusBox {
 				id: row
 				required property var modelData
 				readonly property bool confirming: d.confirming === modelData.id
-				visible: root.available(modelData)
 				icon: modelData.icon
 				text: confirming ? "Press again to confirm" : modelData.text
 				textColor: confirming ? Theme.urgent : Theme.foreground

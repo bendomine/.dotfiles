@@ -226,7 +226,7 @@ StatusBox {
 		implicitWidth: chipRow.implicitWidth + 2 * Theme.spacing
 		implicitHeight: 24
 		radius: height / 2
-		color: chipMouse.containsMouse ? Theme.alpha(chip.tint, 0.18) : "transparent"
+		color: Theme.alpha(chip.tint, chipMouse.containsMouse ? 0.18 : 0)
 		border.width: 1
 		border.color: Theme.alpha(chip.tint, 0.5)
 		Behavior on color { ColorAnimation { duration: Theme.animFast } }

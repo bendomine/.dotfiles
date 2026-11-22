@@ -1,5 +1,5 @@
 configuration {
-	modes: "window,drun,run,ssh,calc";
+	modes: "window,drun,run,ssh";
 	show-icons: true;
 	icon-theme: "Papirus";
 	drun-match-fields: "name,generic,categories";
@@ -9,7 +9,6 @@ configuration {
 	display-run: "";
 	display-window: "󰖲";
 	display-ssh: "󰣀";
-	display-calc: "󰃬";
 	display-filebrowser: "󰉋";
 	filebrowser {
 		directories-first: true;

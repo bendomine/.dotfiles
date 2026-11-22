@@ -13,6 +13,15 @@ with lib; let
       hyprbars
     ];
   };
+
+  # Store copy of quickshell/ for the greetd greeter: the `greeter` user cannot
+  # read ~/.dotfiles (home is 0700). The whole directory, because greeter.qml
+  # imports Theme.qml, shared/, lock/ and status/ from it. (Flakes only see
+  # git-tracked files: new files under quickshell/ need `git add` first.)
+  quickshell-config = builtins.path {
+    path = ./quickshell;
+    name = "quickshell-config";
+  };
 in {
   imports =
     [ # Include the results of the hardware scan.
@@ -121,6 +130,42 @@ in {
     ];
   };
   security.polkit.enable = true;
+  # PAM service for the Quickshell lock screen (quickshell/lock/LockScreen.qml,
+  # PamContext config "quickshell"): the default unix password auth stack.
+  security.pam.services.quickshell = {};
+
+  # Login: greetd on tty1 runs the Quickshell greeter (quickshell/greeter.qml,
+  # same look as the lock screen) in the cage kiosk compositor as user
+  # `greeter`; after a successful login it starts `start-hyprland` through the
+  # user's login shell. Replaces the tty1 agetty login; tty2-6 keep agetty
+  # (Ctrl+Alt+F2 if the greeter ever breaks; cage -s allows VT switching).
+  #   cage -s  allow VT switching   -d  no client-side decorations
+  #        -m last  only the last connected output
+  # QT_WAYLAND_DISABLE_WINDOWDECORATION: no Qt title bar on the window.
+  # WLR_NO_HARDWARE_CURSORS: software cursor, avoids an invisible cursor on NVIDIA.
+  services.greetd = {
+    enable = true;
+    # Restart greetd if it exits; the default without an initial_session (autologin).
+    restart = true;
+    settings.default_session.command = concatStringsSep " " [
+      "${pkgs.coreutils}/bin/env"
+      "QT_WAYLAND_DISABLE_WINDOWDECORATION=1"
+      "WLR_NO_HARDWARE_CURSORS=1"
+      "${pkgs.cage}/bin/cage -s -d -m last --"
+      "${pkgs.quickshell}/bin/quickshell -p ${quickshell-config}/greeter.qml"
+    ];
+  };
+  # The greeter needs a writable home for Quickshell's, fontconfig's and Mesa's
+  # caches. Its ~/.cache/wallpaper points at /var/lib/greeter-theme, where
+  # wallpaper/wallpaper.py (run as ben) mirrors theme.json and current.jpg, so
+  # Theme.qml finds theme.json at the same relative path as in the desktop shell.
+  users.users.greeter.home = "/var/lib/greeter";
+  systemd.tmpfiles.rules = [
+    "d /var/lib/greeter-theme 0755 ben users -"
+    "d /var/lib/greeter 0750 greeter greeter -"
+    "d /var/lib/greeter/.cache 0750 greeter greeter -"
+    "L+ /var/lib/greeter/.cache/wallpaper - - - - /var/lib/greeter-theme"
+  ];
 
   virtualisation.podman = {
     enable = true;

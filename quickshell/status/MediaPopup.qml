@@ -131,7 +131,7 @@ BarPopup {
 		radius: width / 2
 		opacity: enabled ? 1 : 0.4
 		color: primary ? (highlighted ? Theme.mix(Theme.accent, Theme.foreground, 0.15) : Theme.accent)
-			: (highlighted ? Theme.surfaceVariant : (checked ? Theme.alpha(Theme.accent, 0.18) : "transparent"))
+			: (highlighted ? Theme.surfaceVariant : (checked ? Theme.alpha(Theme.accent, 0.18) : Theme.alpha(Theme.surfaceVariant, 0)))
 		border.width: keyFocused ? 2 : 0
 		border.color: primary ? Theme.foreground : Theme.accent
 		scale: btnTap.pressed ? 0.9 : 1

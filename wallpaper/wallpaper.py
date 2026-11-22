@@ -3,11 +3,17 @@
 Renders a domain-warped fBM noise field (main.frag) coloured by a randomly
 generated OKLCH gradient, shows it with hyprpaper and derives a matching
 desktop theme (quickshell, rofi, hyprland, mako) from the same palette. The
-theme's light/dark mode also switches GTK, Qt and KDE apps.
+theme's light/dark mode also switches GTK, Qt and KDE apps. The theme and a
+downscaled wallpaper are mirrored to GREETER_DIR for the login greeter.
 
     wallpaper                    render, apply and write the theme
     wallpaper --seed N           same, reproducibly
+    wallpaper --mode light|dark  same, with a light / dark wallpaper and theme
     wallpaper --preview OUT.png  render wallpaper + palette sheet only
+
+The mode always follows the wallpaper's lightness; --mode draws palettes
+(stepping the seed) until one has that mode. The printed seed and mode
+reproduce the result.
 """
 import argparse
 import glob
@@ -27,6 +33,12 @@ from PIL import Image, ImageDraw
 FALLBACK_SIZE = (1920, 1080)
 LUT_SIZE = 256
 HYPRPAPER_WAIT = 15.0
+MODE_ATTEMPTS = 200
+# Shared copy of theme.json + a downscaled wallpaper for the login greeter
+# (quickshell/greeter), which cannot read ~/.cache. configuration.nix creates
+# it via tmpfiles; when it is missing or not writable, publishing is skipped.
+GREETER_DIR = "/var/lib/greeter-theme"
+GREETER_SIZE = (1920, 1080)  # the greeter blurs it at quarter resolution
 
 # --- OKLab <-> linear sRGB (Bjorn Ottosson) ---
 M_RGB_LMS = np.array([
@@ -171,7 +183,9 @@ HARMONIES = [
     ("triadic", 1.5),
     ("tetradic", 1.0),
 ]
-# name, weight, lightness range of the darkest / lightest stop
+# name, weight, lightness range of the darkest / lightest stop. "dark" and
+# "light" always yield that theme mode, so make_palette skips the other one
+# when a mode is requested.
 LIGHTNESS = [
     ("dark", 3.0, (0.12, 0.20), (0.45, 0.62)),
     ("mid", 2.0, (0.30, 0.42), (0.65, 0.80)),
@@ -204,13 +218,15 @@ def harmony_offsets(rng, name):
     return jittered
 
 
-def make_palette(rng):
+def make_palette(rng, mode=None):
     n = rng.randint(4, 7)
     base = rng.uniform(0.0, 360.0)
     harmony = weighted_choice(rng, HARMONIES)[0]
     anchors = [base + o for o in harmony_offsets(rng, harmony)]
 
-    light_name, _, lo_range, hi_range = weighted_choice(rng, LIGHTNESS)
+    families = [row for row in LIGHTNESS
+                if row[0] != {"light": "dark", "dark": "light"}.get(mode)]
+    light_name, _, lo_range, hi_range = weighted_choice(rng, families)
     lo, hi = rng.uniform(*lo_range), rng.uniform(*hi_range)
     shape = "ramp" if rng.random() < 0.65 else "arch"
     gamma = rng.uniform(0.7, 1.5)
@@ -303,10 +319,16 @@ def ensure_contrast(L, C, h, against, ratio):
         L = min(1.0, max(0.0, L + 0.005 * direction))
 
 
+def palette_mode(palette):
+    """Theme mode matching the palette: dark unless its stops are light."""
+    Ls = lab_to_lch(palette["stops"])[0]
+    return "dark" if float(Ls.mean()) <= 0.6 else "light"
+
+
 def derive_theme(palette, seed):
     stops = palette["stops"]
     Ls, Cs, Hs = lab_to_lch(stops)
-    dark = float(Ls.mean()) <= 0.6
+    dark = palette_mode(palette) == "dark"
     w = Cs + 1e-4
     hue = math.degrees(math.atan2(
         float((w * np.sin(np.radians(Hs))).sum()),
@@ -400,6 +422,15 @@ def hypr_colors(theme):
     }
 
 
+def kitty_colors(theme):
+    # Only background and cursor follow the wallpaper; text, selection, tab
+    # and ANSI colours come from a fixed per-mode palette in ~/.config/kitty.
+    return (f"include ~/.config/kitty/theme-{theme['mode']}.conf\n"
+            f"background {theme['background']}\n"
+            f"cursor {theme['accent']}\n"
+            f"cursor_text_color {theme['background']}\n")
+
+
 def theme_files(theme):
     data = {k: theme[k] for k in THEME_KEYS}
     rasi = "* {\n" + "".join(f"    {var}: {theme[key]};\n"
@@ -421,6 +452,7 @@ def theme_files(theme):
         "colors.rasi": rasi,
         "hyprland-colors.lua": lua,
         "mako-colors": mako,
+        "kitty-colors.conf": kitty_colors(theme),
     }
 
 
@@ -573,6 +605,29 @@ def save_wallpaper(img, directory, seed):
     return path
 
 
+def publish_greeter(img, theme_json):
+    """Mirror theme.json and the wallpaper (as current.jpg) into GREETER_DIR,
+    each replaced atomically."""
+    if not os.access(GREETER_DIR, os.W_OK):
+        return
+    try:
+        small = img.copy()
+        small.thumbnail(GREETER_SIZE)
+        fd, tmp = tempfile.mkstemp(dir=GREETER_DIR, prefix=".tmp-",
+                                   suffix=".jpg")
+        try:
+            with os.fdopen(fd, "wb") as f:
+                small.save(f, format="JPEG", quality=90)
+            os.chmod(tmp, 0o644)
+            os.replace(tmp, os.path.join(GREETER_DIR, "current.jpg"))
+        except BaseException:
+            os.unlink(tmp)
+            raise
+        write_atomic(os.path.join(GREETER_DIR, "theme.json"), theme_json)
+    except OSError as e:
+        print(f"greeter theme: {e}", file=sys.stderr)
+
+
 KDE_SCHEMES = {"dark": "BreezeDark", "light": "BreezeLight"}
 KDE_SCHEME_GROUPS = ("[Colors:", "[ColorEffects:", "[WM]")
 
@@ -647,6 +702,9 @@ def apply_theme(theme):
         f"decoration={{shadow={{color={hc['shadow']}}}}}"
         "}) end")
     run("makoctl", "reload")
+    # kitty reloads kitty.conf (and so kitty-colors.conf) on SIGUSR1. Nix
+    # wraps kitty, so its process name is .kitty-wrapped.
+    run("pkill", "-USR1", "-x", r"kitty|\.kitty-wrapped")
     apply_kde_colors(theme["mode"])
     # xdg-desktop-portal-gtk serves color-scheme to apps (GTK4/libadwaita,
     # Chromium, Electron); GTK3 only follows gtk-theme.
@@ -722,6 +780,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--seed", type=int,
                         help="seed for a reproducible palette and pattern")
+    parser.add_argument("--mode", choices=("light", "dark"),
+                        help="theme mode (and so wallpaper lightness) to "
+                             "draw; default: either")
     parser.add_argument("--preview", metavar="OUT.png",
                         help="write a preview sheet instead of applying")
     args = parser.parse_args()
@@ -729,8 +790,19 @@ def main():
     seed = args.seed
     if seed is None:
         seed = random.SystemRandom().randrange(2 ** 31)
-    rng = random.Random(seed)
-    palette = make_palette(rng)
+    # Step through seeds until the palette has the requested mode; each try is
+    # a fresh Random(seed), so the final seed (and mode) reproduces it.
+    for attempt in range(MODE_ATTEMPTS):
+        rng = random.Random(seed + attempt)
+        palette = make_palette(rng, args.mode)
+        if args.mode is None or palette_mode(palette) == args.mode:
+            break
+    else:
+        print(f"No {args.mode} palette in {MODE_ATTEMPTS} seeds from {seed}",
+              file=sys.stderr)
+        sys.exit(1)
+    seed += attempt
+    label = f"seed {seed}" + (f" --mode {args.mode}" if args.mode else "")
     params = structure(rng)
     theme = derive_theme(palette, seed)
 
@@ -747,18 +819,20 @@ def main():
 
     if args.preview:
         preview_sheet(img, palette, theme).save(args.preview)
-        print(f"seed {seed}: {palette['desc']}")
+        print(f"{label}: {palette['desc']}")
         print(theme_files(theme)["theme.json"], end="")
         return
 
     directory = cache_dir()
     path = save_wallpaper(img, directory, seed)
-    for name, text in theme_files(theme).items():
+    files = theme_files(theme)
+    for name, text in files.items():
         write_atomic(os.path.join(directory, name), text)
+    publish_greeter(img, files["theme.json"])
     apply_theme(theme)
     apply_wallpaper(path, mons)
     prune(directory, path)
-    print(f"seed {seed}: {palette['desc']} -> {path}")
+    print(f"{label}: {palette['desc']} -> {path}")
 
 
 if __name__ == "__main__":

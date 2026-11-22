@@ -12,18 +12,31 @@ import ".."
 // merged into one row. "Shell" binds form the bar section at the top (minus the
 // launcher itself and binds already shown as a tile).
 // Shift+Return / right click on the Screenshot tile annotates instead of copying.
+// The Wallpaper tile opens the wallpaper chooser (quickshell:toggle-wallpaper, a
+// second popup on this pill: random / light / dark, with single-key shortcuts);
+// Shift+Return / right click on it starts a random wallpaper directly.
+// The Calculator tile opens CalculatorPopup (quickshell:toggle-calculator), a
+// third popup on this pill.
 StatusBox {
 	id: root
 
 	readonly property var actions: [
 		{ icon: "󰀻", label: "Apps", bind: "Apps: App launcher", command: ["rofi", "-show", "combi", "-modes", "combi,drun,window", "-combi-modes", "drun,run"] },
 		{ icon: "󰖲", label: "Windows", bind: "Apps: Window switcher", command: ["rofi", "-show", "window"] },
-		{ icon: "󰃬", label: "Calculator", bind: "Apps: Calculator", command: ["sh", "-c", "~/.config/rofi/calc.sh"] },
+		{ icon: "󰃬", label: "Calculator", bind: "Shell: Calculator", popup: "toggle-calculator" },
 		{ icon: "󰆍", label: "Terminal", bind: "Apps: Terminal", command: ["kitty"] },
 		{ icon: "󰉋", label: "Files", bind: "Apps: File manager", command: ["dolphin"] },
 		{ icon: "", label: "Emacs", bind: "Apps: Emacs (client)", command: ["emacsclient", "-c"] },
 		{ icon: "󰹑", label: "Screenshot", bind: "Screenshots: Copy area", delay: 300, command: ["grimblast", "copy", "area"], altCommand: ["sh", "-c", "GRIMBLAST_EDITOR=\"satty --filename\" grimblast edit area"] },
-		{ icon: "󰸉", label: "Wallpaper", bind: "Shell: New wallpaper", command: ["systemctl", "--user", "start", "wallpaper.service"] }
+		{ icon: "󰸉", label: "Wallpaper", bind: "Shell: New wallpaper", popup: "toggle-wallpaper", altCommand: ["systemctl", "--user", "start", "wallpaper.service"] }
+	]
+
+	// Wallpaper chooser rows: the user unit to start (wallpaper@<mode> forces the
+	// theme mode). `l` is taken by popup navigation, so Light is on `s` (sun).
+	readonly property var wallpaperModes: [
+		{ icon: "󰝮", text: "Random", key: "w", unit: "wallpaper.service" },
+		{ icon: "󰖙", text: "Light", key: "s", unit: "wallpaper@light.service" },
+		{ icon: "󰖔", text: "Dark", key: "d", unit: "wallpaper@dark.service" }
 	]
 
 	readonly property string launcherBind: "Shell: Launcher / keybinding help"
@@ -73,6 +86,10 @@ StatusBox {
 	}
 
 	function run(action, alt) {
+		if (action.popup && !(alt && action.altCommand)) {
+			openPopup(action.popup);
+			return;
+		}
 		const command = alt && action.altCommand ? action.altCommand : action.command;
 		popup.close();
 		if (action.delay) {
@@ -85,18 +102,27 @@ StatusBox {
 		}
 	}
 
-	// Bar section entry: open that popup (on this screen) or toggle the bar.
+	// Open the popup registered as `name` on this screen (Popups closes this one).
+	function openPopup(name) {
+		const other = Popups.registry.find(p => p.shortcutName === name && p.screenName === popup.screenName) ?? Popups.find(name);
+		if (other)
+			other.show(false);
+	}
+
+	// Bar section entry: open that popup or toggle the bar.
 	function runShell(description) {
 		const target = shellTargets[description];
 		if (!target)
 			return;
-		if (target.bar) {
+		if (target.bar)
 			ShellState.barVisible = !ShellState.barVisible;
-		} else if (target.popup) {
-			const other = Popups.registry.find(p => p.shortcutName === target.popup && p.screenName === popup.screenName) ?? Popups.find(target.popup);
-			if (other)
-				other.show(false); // Popups closes this one
-		}
+		else if (target.popup)
+			root.openPopup(target.popup);
+	}
+
+	function regenerate(mode) {
+		chooser.close();
+		Quickshell.execDetached(["systemctl", "--user", "start", mode.unit]);
 	}
 
 	function refreshBinds() {
@@ -261,7 +287,7 @@ StatusBox {
 	}
 
 	// ── Pill ─────────────────────────────────────────────────────────────
-	active: popup.open
+	active: popup.open || chooser.open || calculator.open
 	// Circular pill: logo box plus equal padding fills the pill height.
 	padding: (Theme.pillHeight - logo.implicitWidth) / 2
 
@@ -319,6 +345,8 @@ StatusBox {
 		id: popup
 		anchorItem: root
 		shortcutName: "toggle-launcher"
+		// Hovering the pill must not swap an open chooser / calculator for the launcher.
+		hoverToOpen: !chooser.open && !calculator.open
 		contentWidth: 440
 		// Bar list (2 columns), tile grid (4 columns) and keybinding list are stacked
 		// vertically: navigate geometrically.
@@ -510,5 +538,56 @@ StatusBox {
 				}
 			}
 		}
+	}
+
+	// ── Wallpaper chooser ────────────────────────────────────────────────
+	// Only opened by its shortcut or the Wallpaper tile; hovering / clicking the
+	// pill belongs to the launcher.
+	BarPopup {
+		id: chooser
+		anchorItem: root
+		shortcutName: "toggle-wallpaper"
+		hoverToOpen: false
+		clickToToggle: false
+		contentWidth: 240
+
+		onKeyPressed: event => {
+			const k = event.text.toLowerCase();
+			const i = root.wallpaperModes.findIndex(m => m.key === k);
+			if (i < 0)
+				return;
+			event.accepted = true;
+			const row = modeRows.itemAt(i);
+			if (row)
+				chooser.setFocusItem(row);
+			root.regenerate(root.wallpaperModes[i]);
+		}
+
+		PopupHeader {
+			icon: "󰏘"
+			title: "New wallpaper"
+			subtitle: "Current theme: " + (Theme.dark ? "dark" : "light")
+		}
+
+		Repeater {
+			id: modeRows
+			model: root.wallpaperModes
+			delegate: MenuRow {
+				id: modeRow
+				required property var modelData
+				icon: modelData.icon
+				text: modelData.text
+				onActivated: root.regenerate(modelData)
+
+				KeyHint {
+					label: modeRow.modelData.key
+				}
+			}
+		}
+	}
+
+	CalculatorPopup {
+		id: calculator
+		anchorItem: root
 	}
 }

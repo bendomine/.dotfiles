@@ -92,7 +92,7 @@ StatusBox {
 					Rectangle {
 						anchors.fill: parent
 						radius: height / 2
-						color: slot.urgent && !slot.isActive ? Theme.alpha(Theme.urgent, 0.25) : (slotMouse.containsMouse && !slot.isActive ? Theme.surfaceVariant : "transparent")
+						color: slot.urgent && !slot.isActive ? Theme.alpha(Theme.urgent, 0.25) : Theme.alpha(Theme.surfaceVariant, slotMouse.containsMouse && !slot.isActive ? 1 : 0)
 						Behavior on color { ColorAnimation { duration: Theme.animFast } }
 					}
 

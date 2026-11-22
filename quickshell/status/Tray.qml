@@ -93,7 +93,7 @@ StatusBox {
 					implicitWidth: root.cellSize
 					implicitHeight: root.cellSize
 					radius: Theme.radiusSmall
-					color: keyFocused || hovered ? Theme.surfaceVariant : "transparent"
+					color: keyFocused || hovered ? Theme.surfaceVariant : Theme.alpha(Theme.surfaceVariant, 0)
 					border.width: keyFocused ? 1 : 0
 					border.color: Theme.accent
 					Behavior on color { ColorAnimation { duration: Theme.animFast } }

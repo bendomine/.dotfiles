@@ -254,6 +254,9 @@ hl.config({
         force_default_wallpaper = 1,
         disable_hyprland_logo   = false,
 	disable_splash_rendering = true,
+	-- Let a restarted quickshell re-lock a session whose lock client died
+	-- (instead of the permanent "lockscreen died" screen).
+	allow_session_lock_restore = true,
     },
 })
 
@@ -323,6 +326,9 @@ hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal), { description = "Apps: Ter
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close(), { description = "Windows: Close window" })
 -- closeWindowBind:set_enabled(false)
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"), { description = "Session: Exit Hyprland" })
+-- Quickshell lock screen (quickshell/lock). `locked` so it also works while the
+-- session is locked, e.g. to re-lock after restarting a crashed quickshell.
+hl.bind(mainMod .. " + Escape", hl.dsp.global("quickshell:lock"), { locked = true, description = "Session: Lock screen" })
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(fileManager), { description = "Apps: File manager" })
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd("emacsclient -c"), { description = "Apps: Emacs (client)" })
 hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("emacs"), { description = "Apps: Emacs (new instance)" })
@@ -398,7 +404,7 @@ hl.bind(mainMod .. " + slash", hl.dsp.global("quickshell:toggle-launcher"), { de
 hl.bind(mainMod .. " + B", hl.dsp.global("quickshell:toggle-bluetooth"), { description = "Shell: Bluetooth" })
 hl.bind(mainMod .. " + T", hl.dsp.global("quickshell:toggle-tray"), { description = "Shell: System tray" })
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd("rofi -show window"), { description = "Apps: Window switcher" })
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd("~/.config/rofi/calc.sh"), { description = "Apps: Calculator" })
+hl.bind(mainMod .. " + R", hl.dsp.global("quickshell:toggle-calculator"), { description = "Shell: Calculator" })
 hl.bind(mainMod .. " + A", hl.dsp.global("quickshell:toggle-audio"), { description = "Shell: Audio" })
 hl.bind(mainMod .. " + N", hl.dsp.global("quickshell:toggle-network"), { description = "Shell: Network" })
 hl.bind(mainMod .. " + G", hl.dsp.global("quickshell:toggle-media"), { description = "Shell: Media player" })
@@ -406,7 +412,7 @@ hl.bind(mainMod .. " + Y", hl.dsp.global("quickshell:toggle-calendar"), { descri
 hl.bind(mainMod .. " + Z", hl.dsp.global("quickshell:toggle-system"), { description = "Shell: System" })
 hl.bind(mainMod .. " + X", hl.dsp.global("quickshell:toggle-power"), { description = "Shell: Power menu" })
 hl.bind(mainMod .. " + SHIFT + B", hl.dsp.global("quickshell:toggle-bar"), { description = "Shell: Toggle bar" })
-hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("systemctl --user start wallpaper.service"), { description = "Shell: New wallpaper" })
+hl.bind(mainMod .. " + SHIFT + W", hl.dsp.global("quickshell:toggle-wallpaper"), { description = "Shell: New wallpaper" })
 
 
 --------------------------------

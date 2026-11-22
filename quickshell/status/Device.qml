@@ -61,7 +61,7 @@ MenuRow {
 		implicitWidth: 26
 		implicitHeight: 26
 		radius: 13
-		color: optionsMouse.containsMouse ? Theme.alpha(Theme.foreground, 0.12) : "transparent"
+		color: Theme.alpha(Theme.foreground, optionsMouse.containsMouse ? 0.12 : 0)
 		Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
 		Glyph {

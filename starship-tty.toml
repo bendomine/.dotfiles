@@ -1,0 +1,87 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# ASCII-only variant of starship.toml for the Linux virtual console
+# (TERM=linux), which has no Nerd Font / powerline glyphs and only the 8
+# basic ANSI background colours. Selected via STARSHIP_CONFIG in the zsh init
+# (home.nix). Keep the module layout in sync with starship.toml.
+# Every symbol here must stay ASCII, including starship defaults that are not
+# (character "❯", git_status arrows, truncation "…").
+
+format = """
+[ nix ](bg:white fg:black)\
+$directory\
+$git_branch\
+$git_status\
+$nodejs\
+$bun\
+$rust\
+$golang\
+$php\
+$time\
+\n$character"""
+
+[character]
+success_symbol = "[>](bold green)"
+error_symbol = "[x](bold red)"
+vimcmd_symbol = "[<](bold green)"
+vimcmd_visual_symbol = "[<](bold yellow)"
+vimcmd_replace_symbol = "[<](bold purple)"
+vimcmd_replace_one_symbol = "[<](bold purple)"
+
+[directory]
+style = "bold fg:white bg:blue"
+format = "[ $path ]($style)[$read_only]($read_only_style)"
+read_only = " ro"
+read_only_style = "fg:red bg:blue"
+truncation_length = 3
+truncation_symbol = ".../"
+
+[git_branch]
+symbol = "git"
+style = "fg:blue"
+format = '[ $symbol $branch ]($style)'
+
+[git_status]
+style = "fg:blue"
+format = '[($all_status$ahead_behind )]($style)'
+conflicted = "="
+ahead = ">"
+behind = "<"
+diverged = "<>"
+untracked = "?"
+stashed = "$"
+modified = "!"
+staged = "+"
+renamed = "r"
+deleted = "x"
+
+[nodejs]
+symbol = "node"
+style = "fg:blue"
+format = '[ $symbol ($version) ]($style)'
+
+[bun]
+symbol = "bun"
+style = "fg:blue"
+format = '[ $symbol ($version) ]($style)'
+
+[rust]
+symbol = "rs"
+style = "fg:blue"
+format = '[ $symbol ($version) ]($style)'
+
+[golang]
+symbol = "go"
+style = "fg:blue"
+format = '[ $symbol ($version) ]($style)'
+
+[php]
+symbol = "php"
+style = "fg:blue"
+format = '[ $symbol ($version) ]($style)'
+
+[time]
+disabled = false
+time_format = "%l:%M %p" # Hour:Minute Format
+style = "fg:white"
+format = '[ $time ]($style)'

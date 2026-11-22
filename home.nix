@@ -14,6 +14,24 @@ let
     libraries = with pkgs.python3Packages; [moderngl numpy pillow];
   } (builtins.readFile ./wallpaper/wallpaper.py);
 
+  # One-shot wallpaper unit running `wallpaper<args>`.
+  wallpaperService = args: {
+    Unit = {
+      Description = "One-shot wallpaper generator";
+      After = [ "graphical-session.target" ];
+    };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${wallpaper-bin}/bin/wallpaper${args}";
+      Environment = [
+        # Out-of-store shader: edits apply without a rebuild.
+        "WALLPAPER_SHADER=%h/.dotfiles/wallpaper/main.frag"
+        # hyprctl/makoctl come from the system and user profiles.
+        "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/%u/bin"
+      ];
+    };
+  };
+
   # Flake inputs whose packages should track upstream; `nup` bumps exactly these.
   flakePackages = [ "omp" ];
   rebuild = "sudo nixos-rebuild switch --flake \"$HOME/.dotfiles#$(hostname)\"";
@@ -57,7 +75,7 @@ in
       moderngl
       numpy
       pillow
-      matplotlib
+      matplotlib # also renders the quickshell calculator's LaTeX preview
     ]))
     discord
     protontricks
@@ -110,8 +128,8 @@ in
 	physics ec cm-super
       ]
     ))
-    # Wrapper sets the plugin path itself; no ROFI_PLUGIN_PATH needed.
-    (rofi.override { plugins = [ rofi-calc ]; })
+    rofi
+    # qalc: the quickshell calculator popup (quickshell/scripts/calc.py).
     libqalculate
     wl-clipboard
     brightnessctl
@@ -147,6 +165,12 @@ in
     client.enable = true;
     startWithUserSession = "graphical";
   };
+  # Idle lock + screen blanking. Settings live out of store in hypr/hypridle.conf
+  # (~/.config/hypr is linked to the repo, so HM must not write a file there);
+  # it locks through the Quickshell lock screen (`qs ipc call lock lock`).
+  # Started by graphical-session.target, which UWSM reaches with WAYLAND_DISPLAY,
+  # HYPRLAND_INSTANCE_SIGNATURE and PATH imported into the user manager.
+  services.hypridle.enable = true;
   programs.git = {
     enable = true;
     settings.user = {
@@ -162,6 +186,16 @@ in
     dotDir = "${config.xdg.configHome}/zsh";
 
     initContent = ''
+      # The Linux virtual console (tty1 before Hyprland, Ctrl+Alt+F2...) has no
+      # Nerd Font glyphs and only 8/16 colours: use the ASCII-only prompt there.
+      # Starship reads STARSHIP_CONFIG on every render, so order vs. its init is moot.
+      # The elif drops the variable when it was inherited from a tty session
+      # (e.g. Hyprland launched from tty1 -> kitty), keeping GUI prompts intact.
+      if [[ $TERM == linux ]]; then
+        export STARSHIP_CONFIG="$HOME/.config/starship-tty.toml"
+      elif [[ $STARSHIP_CONFIG == */starship-tty.toml ]]; then
+        unset STARSHIP_CONFIG
+      fi
       echo
       fastfetch
       if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
@@ -185,7 +219,21 @@ setopt aliases
 
   programs.omp = {
     enable = true;
-    settings.startup.quiet = true;
+    # The module overwrites ~/.omp/agent/config.yml with exactly these settings
+    # on every switch, so anything chosen in omp at runtime (onboarding,
+    # /settings) is lost. Declare it here instead. setupVersion marks the setup
+    # wizard as done; bump it when an omp update shows the wizard again
+    # (CURRENT_SETUP_VERSION in packages/tui/src/setup/setup-version.ts).
+    settings = {
+      setupVersion = 3;
+      startup.quiet = true;
+      symbolPreset = "nerd";
+      composer.shape = "band";
+      theme = {
+        dark = "titanium";
+        light = "light";
+      };
+    };
   };
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -222,6 +270,7 @@ setopt aliases
     "btop".source = link "${dotfilesDir}/btop";
     "gtk-3.0".source = link "${dotfilesDir}/gtk-3.0";
     "starship.toml".source = link "${dotfilesDir}/starship.toml";
+    "starship-tty.toml".source = link "${dotfilesDir}/starship-tty.toml";
   };
 
   # Cursor
@@ -233,26 +282,15 @@ setopt aliases
     size = 24;
   };
 
-  systemd.user.services.wallpaper = {
-    Unit = {
-      Description = "One-shot wallpaper generator";
-      After = [ "graphical-session.target" ];
-    };
-    Service = {
-      Type = "oneshot";
-      ExecStart = "${wallpaper-bin}/bin/wallpaper";
-      Environment = [
-        # Out-of-store shader: edits apply without a rebuild.
-        "WALLPAPER_SHADER=%h/.dotfiles/wallpaper/main.frag"
-        # hyprctl/makoctl come from the system and user profiles.
-        "PATH=/run/current-system/sw/bin:/etc/profiles/per-user/%u/bin"
-      ];
-    };
-  };
+  # wallpaper.service picks a random light/dark theme; the template instance
+  # wallpaper@light.service / wallpaper@dark.service forces the mode.
+  systemd.user.services.wallpaper = wallpaperService "";
+  systemd.user.services."wallpaper@" = wallpaperService " --mode %i";
   # mako refuses to start when its include file is missing.
   systemd.user.tmpfiles.rules = [
     "d %h/.cache/wallpaper 0755 - - -"
     "f %h/.cache/wallpaper/mako-colors 0644 - - -"
+    "f %h/.cache/wallpaper/kitty-colors.conf 0644 - - -"
   ];
   systemd.user.timers.wallpaper = {
     Unit = {

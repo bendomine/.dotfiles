@@ -23,6 +23,10 @@ Rectangle {
 	property color iconColor: selected ? Theme.accent : (highlighted ? Theme.foreground : Theme.foregroundMuted)
 	property bool navigable: true
 	property bool keyFocused: false
+	// True while keyFocused came from mouse hover (BarPopup focus follows the
+	// pointer); the accent marker is only shown for real keyboard navigation.
+	property bool mouseFocused: false
+	onKeyFocusedChanged: if (!keyFocused) mouseFocused = false
 	readonly property bool hovered: hover.hovered
 	readonly property bool highlighted: keyFocused || hovered
 	default property alias trailing: trailingRow.data
@@ -49,7 +53,10 @@ Rectangle {
 	implicitWidth: content.implicitWidth + 2 * Theme.spacing
 	implicitHeight: compact ? Theme.rowHeightCompact : Math.max(Theme.rowHeight, content.implicitHeight + 8)
 	radius: Theme.radiusSmall
-	color: highlighted ? Theme.surfaceVariant : (selected ? Theme.alpha(Theme.accent, 0.08) : "transparent")
+	// Base and hover tints share a hue (alpha 0 → alpha n) so the fade never
+	// passes through another colour ("transparent" is transparent black).
+	color: selected ? Theme.alpha(Theme.accent, highlighted ? 0.14 : 0.08)
+		: Theme.alpha(Theme.foreground, highlighted ? 0.07 : 0)
 	opacity: enabled ? 1 : 0.45
 	Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
@@ -58,7 +65,7 @@ Rectangle {
 		anchors.left: parent.left
 		anchors.verticalCenter: parent.verticalCenter
 		width: 3
-		height: root.keyFocused ? parent.height * 0.5 : 0
+		height: root.keyFocused && !root.mouseFocused ? parent.height * 0.5 : 0
 		radius: 1.5
 		color: Theme.accent
 		Behavior on height { NumberAnimation { duration: Theme.animNormal; easing.type: Easing.OutCubic } }
@@ -71,9 +78,10 @@ Rectangle {
 			const popup = Popups.owner(root);
 			if (!popup)
 				return;
-			if (hovered)
+			if (hovered) {
 				popup.setFocusItem(root);
-			else if (popup.focusItem === root)
+				root.mouseFocused = root.keyFocused;
+			} else if (popup.focusItem === root)
 				popup.setFocusItem(null);
 		}
 	}

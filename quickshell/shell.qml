@@ -4,6 +4,7 @@ import Quickshell
 import QtQuick
 import "."
 import "./shared"
+import "./lock"
 import "./status"
 
 ShellRoot {
@@ -18,4 +19,7 @@ ShellRoot {
 
 	BatteryNotifier {}
 	Osd {}
+
+	// Session lock (quickshell:lock, `qs ipc call lock lock`); one for all screens.
+	LockScreen {}
 }

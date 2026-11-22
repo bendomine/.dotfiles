@@ -271,7 +271,7 @@ BarPopup {
 				Layout.preferredWidth: 1
 				Layout.preferredHeight: 34
 				radius: Theme.radiusSmall
-				color: isToday ? Theme.accent : (cellHover.hovered ? Theme.surfaceVariant : (keyFocused ? Theme.alpha(Theme.accent, 0.12) : "transparent"))
+				color: isToday ? Theme.accent : (cellHover.hovered ? Theme.surfaceVariant : (keyFocused ? Theme.alpha(Theme.accent, 0.12) : Theme.alpha(Theme.surfaceVariant, 0)))
 				border.width: keyFocused ? 2 : 0
 				border.color: isToday ? Theme.foreground : Theme.accent
 				Behavior on color { ColorAnimation { duration: Theme.animFast } }
